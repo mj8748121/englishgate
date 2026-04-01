@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イングリッシュゲート</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh}
+#app{max-width:700px;margin:0 auto;padding:12px}
+
+/* furigana */
+ruby{ruby-align:center}
+rt{font-size:0.55em;color:#555;letter-spacing:0.05em}
+.fc-m ruby rt{font-size:0.45em;color:#3d5de6}
+.ch ruby rt{font-size:0.5em;color:#444}
+.mc-mean ruby rt{font-size:0.75em}
+.lw-m ruby rt{font-size:0.45em;color:#3d5de6}
+.wi-m ruby rt{font-size:0.8em}
+
+.header{text-align:center;padding:14px 0 10px;margin-bottom:10px}
+.header h1{font-size:20px;font-weight:700;color:#1a1a2e}
+.header p{font-size:12px;color:#666;margin-top:3px}
+
+/* tabs */
+.tabs{display:flex;gap:5px;margin-bottom:12px;background:#fff;border-radius:12px;padding:5px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.tab-btn{flex:1;padding:8px 4px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:600;color:#888;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s}
+.tab-btn .ico{font-size:15px}
+.tab-btn:hover{color:#444;background:#f0f4ff}
+.tab-btn.active{background:#4f6ef7;color:#fff;box-shadow:0 2px 8px rgba(79,110,247,0.3)}
+
+/* screens */
+.screen{display:none}.screen.visible{display:block}
+
+/* stage selector */
+.stage-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:nowrap;overflow:hidden}
+.stage-header h2{font-size:14px;font-weight:600;color:#555;white-space:nowrap;flex-shrink:0}
+.stage-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;scrollbar-color:#c7d2fe transparent;flex:1;min-width:0;-webkit-overflow-scrolling:touch}
+.stage-scroll::-webkit-scrollbar{height:3px}
+.stage-scroll::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:3px}
+.stage-scroll::-webkit-scrollbar-track{background:transparent}
+.sg-btn{padding:5px 11px;border-radius:20px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:#666;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.sg-btn:hover{border-color:#4f6ef7;color:#4f6ef7}
+.sg-btn.on{background:#4f6ef7;border-color:#4f6ef7;color:#fff}
+
+/* stats row */
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;background:#fff;border-radius:10px;padding:9px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.stat-l{font-size:10px;color:#888;margin-bottom:2px;font-weight:500}
+.stat-v{font-size:18px;font-weight:700}
+
+/* progress */
+.prog-wrap{margin-bottom:12px}
+.prog-bar{height:6px;background:#e0e7ff;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#4f6ef7,#818cf8);transition:width .4s}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:3px}
+
+/* flashcard */
+.fc-wrap{perspective:900px;margin-bottom:12px;cursor:pointer;user-select:none}
+.fc{position:relative;width:100%;height:200px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.fc.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;backface-visibility:hidden;padding:1.5rem}
+.face-front{background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.09)}
+.face-back{background:linear-gradient(135deg,#eef2ff,#e0e7ff);box-shadow:0 4px 20px rgba(79,110,247,0.15);transform:rotateY(180deg)}
+.fc-stage{font-size:10px;font-weight:700;color:#fff;background:#4f6ef7;padding:2px 10px;border-radius:20px;letter-spacing:0.5px}
+.fc-word{font-size:34px;font-weight:700;color:#1a1a2e;letter-spacing:-1px}
+.fc-m{font-size:24px;font-weight:700;color:#4f6ef7;text-align:center;line-height:1.5}
+.fc-ex{font-size:13px;color:#555;text-align:center;font-style:italic;line-height:1.6;max-width:280px}
+.hint{font-size:12px;color:#aaa}
+.spk-btn{background:#4f6ef7;border:none;color:#fff;border-radius:20px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:500;transition:all .15s}
+.spk-btn:hover{background:#3d5de6}
+.spk-btn.playing{background:#7c3aed}
+.spk-sm{background:none;border:1.5px solid #4f6ef7;color:#4f6ef7;border-radius:20px;padding:4px 12px;cursor:pointer;font-size:11px;font-weight:500;transition:all .15s}
+.spk-sm:hover{background:#eef2ff}
+.spk-sm.playing{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+.card-btns{display:flex;gap:10px;margin-bottom:12px}
+.btn{flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-again{background:#fff0ee;color:#e53e3e}
+.btn-again:hover{background:#ffe4e0}
+.btn-got{background:#f0fff4;color:#276749}
+.btn-got:hover{background:#dcfce7}
+.btn-next{background:#4f6ef7;color:#fff;box-shadow:0 2px 8px rgba(79,110,247,0.25)}
+.btn-next:hover{background:#3d5de6}
+.btn-outline{background:#fff;color:#666;border:1.5px solid #dde3f0}
+.btn-outline:hover{border-color:#4f6ef7;color:#4f6ef7}
+
+/* quiz setup */
+.setup-card{background:#fff;border-radius:16px;padding:1.2rem;box-shadow:0 2px 10px rgba(0,0,0,0.07);margin-bottom:12px;overflow:hidden}
+.setup-label{font-size:12px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.mode-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mode-btn{flex:1;min-width:80px;padding:10px 8px;border-radius:10px;border:2px solid #dde3f0;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#888;line-height:1.6;transition:all .15s;text-align:center}
+.mode-btn:hover{border-color:#4f6ef7;color:#4f6ef7}
+.mode-btn.active{border-color:#4f6ef7;background:#eef2ff;color:#3d5de6}
+.cnt-row{display:flex;gap:6px;margin-bottom:14px}
+.cnt-btn{flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#888;transition:all .15s}
+.cnt-btn:hover{border-color:#4f6ef7;color:#4f6ef7}
+.cnt-btn.active{border-color:#4f6ef7;background:#eef2ff;color:#3d5de6}
+.setup-info{font-size:12px;color:#aaa;margin-bottom:12px;text-align:center}
+/* stage select inside setup-card needs its own scroll wrapper */
+#q-stage-select .stage-scroll,#q-prog-select .stage-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:#c7d2fe transparent;min-width:0;-webkit-overflow-scrolling:touch}
+#q-stage-select .stage-scroll::-webkit-scrollbar,#q-prog-select .stage-scroll::-webkit-scrollbar{height:3px}
+#q-stage-select .stage-scroll::-webkit-scrollbar-thumb,#q-prog-select .stage-scroll::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:3px}
+
+/* quiz */
+.q-header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.q-word{font-size:24px;font-weight:700;color:#1a1a2e}
+.q-sub{font-size:13px;color:#888;margin-bottom:12px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.ch{padding:13px 8px;border-radius:10px;border:2px solid #dde3f0;background:#fff;cursor:pointer;font-size:15px;text-align:center;transition:all .15s;color:#1a1a2e;font-weight:500;line-height:1.5}
+.ch:hover:not(.locked){border-color:#4f6ef7;background:#eef2ff;color:#4f6ef7}
+.ch.correct{background:#f0fff4;border-color:#38a169;color:#276749}
+.ch.wrong{background:#fff0ee;border-color:#e53e3e;color:#c53030}
+.ch.show-c{background:#f0fff4;border-color:#38a169;color:#276749}
+.ch.locked{pointer-events:none}
+.fb{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none;font-weight:500}
+.fb.ok{background:#f0fff4;color:#276749;border:1.5px solid #68d391}
+.fb.ng{background:#fff0ee;color:#c53030;border:1.5px solid #fc8181}
+
+/* results */
+.res-wrap{text-align:center;padding:1.5rem;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.r-em{font-size:52px;margin-bottom:10px}
+.r-ti{font-size:22px;font-weight:700;margin-bottom:6px}
+.r-su{font-size:14px;color:#666;margin-bottom:16px;line-height:1.6}
+.r-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.wrong-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#fff0ee;border:1px solid #fca5a5;margin-bottom:5px;font-size:12px;text-align:left}
+.wrong-w{font-weight:700;color:#c53030;min-width:70px}
+.wrong-m{color:#555}
+
+/* listen */
+.lcard{background:#fff;border-radius:16px;padding:1.4rem;text-align:center;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.play-big{width:64px;height:64px;border-radius:50%;background:#4f6ef7;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:all .2s;color:#fff;font-size:22px;box-shadow:0 4px 16px rgba(79,110,247,0.4)}
+.play-big:hover{transform:scale(1.08)}
+.play-big.playing{background:#7c3aed}
+.lw-word{font-size:28px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.lw-m{font-size:18px;font-weight:600;color:#4f6ef7;margin-bottom:6px;line-height:1.6}
+.lw-ex{font-size:13px;color:#666;font-style:italic;margin-bottom:10px;line-height:1.6}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:6px}
+.wi{padding:8px 10px;border-radius:8px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;text-align:left;transition:all .15s}
+.wi:hover{border-color:#4f6ef7;background:#eef2ff}
+.wi.active{border-color:#4f6ef7;background:#eef2ff}
+.wi-w{font-size:13px;font-weight:600;color:#1a1a2e}
+.wi-m{font-size:11px;color:#888;margin-top:2px}
+
+/* mastery */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-bottom:12px}
+.mcard{padding:10px 11px;border-radius:10px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;transition:border-color .15s}
+.mcard:hover{border-color:#4f6ef7}
+.mc-top{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.mc-badge{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.b-none{background:#e0e7ff;color:#4f6ef7}
+.b-learn{background:#fef3c7;color:#92400e}
+.b-ok{background:#d1fae5;color:#065f46}
+.b-master{background:#ede9fe;color:#4c1d95}
+.mc-word{font-size:13px;font-weight:600;color:#1a1a2e}
+.mc-stage{font-size:10px;color:#aaa}
+.mc-mean{font-size:11px;color:#666;margin-bottom:5px}
+.mc-stats{font-size:10px;color:#aaa;display:flex;justify-content:space-between;margin-bottom:3px}
+.mc-bar{height:3px;border-radius:2px;background:#e8ecf0;overflow:hidden}
+.mc-fill{height:100%;border-radius:2px;transition:width .3s}
+
+.flt-row{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.flt{padding:4px 11px;border-radius:20px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;font-size:12px;font-weight:500;color:#666;transition:all .15s}
+.flt.on{background:#4f6ef7;border-color:#4f6ef7;color:#fff}
+
+.sec-title{font-size:11px;font-weight:600;color:#888;margin-bottom:7px;text-transform:uppercase;letter-spacing:0.5px}
+.btn-reset{background:#fff;color:#e53e3e;border:1.5px solid #e53e3e;border-radius:8px;padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.btn-reset:hover{background:#fff0ee}
+
+/* profile overlay */
+#profile-overlay{position:fixed;inset:0;background:rgba(15,20,60,0.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+#profile-modal{background:#fff;border-radius:20px;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.pm-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.pm-sub{font-size:13px;color:#888;margin-bottom:16px}
+.profile-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:260px;overflow-y:auto}
+.profile-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:2px solid #e8ecf5;background:#f8faff;cursor:pointer;transition:all .15s}
+.profile-item:hover{border-color:#4f6ef7;background:#eef2ff}
+.profile-item.active-p{border-color:#4f6ef7;background:#eef2ff}
+.pi-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.pi-info{flex:1;min-width:0}
+.pi-name{font-size:14px;font-weight:600;color:#1a1a2e}
+.pi-stats{font-size:11px;color:#888;margin-top:1px}
+.pi-actions{display:flex;gap:5px}
+.pi-sel{padding:5px 12px;border-radius:8px;border:none;background:#4f6ef7;color:#fff;cursor:pointer;font-size:12px;font-weight:600}
+.pi-del{padding:5px 8px;border-radius:8px;border:none;background:#fff0ee;color:#e53e3e;cursor:pointer;font-size:12px;font-weight:600}
+.add-profile{display:flex;gap:8px;margin-bottom:12px}
+.add-input{flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid #dde3f0;font-size:14px;outline:none}
+.add-input:focus{border-color:#4f6ef7}
+.add-btn{padding:9px 16px;border-radius:10px;border:none;background:#4f6ef7;color:#fff;cursor:pointer;font-size:13px;font-weight:600}
+.add-btn:hover{background:#3d5de6}
+.pm-close{width:100%;padding:10px;border-radius:10px;border:1.5px solid #dde3f0;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#555;transition:all .15s}
+.pm-close:hover{background:#f0f4ff}
+
+/* current user badge in header */
+#user-badge{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:20px;padding:4px 12px 4px 8px;cursor:pointer;transition:all .15s;margin-top:6px}
+#user-badge:hover{background:#e0e7ff}
+.ub-avatar{font-size:16px}
+.ub-name{font-size:13px;font-weight:600;color:#4f6ef7}
+.ub-change{font-size:11px;color:#818cf8;margin-left:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>🏰 イングリッシュゲート</h1>
+    <p id="total-lbl">英検5級 全単語読み込み中...</p>
+    <div id="user-badge" onclick="openProfile()">
+      <span class="ub-avatar" id="ub-avatar">👤</span>
+      <span class="ub-name" id="ub-name">生徒を選ぶ</span>
+      <span class="ub-change">▼ 切替</span>
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div id="profile-overlay" style="display:none">
+    <div id="profile-modal">
+      <div class="pm-title">👥 生徒を選択</div>
+      <div class="pm-sub">生徒ごとに進捗が保存されます</div>
+      <div class="add-profile">
+        <input class="add-input" id="new-name-input" placeholder="名前を入力..." maxlength="20" onkeydown="if(event.key==='Enter')addProfile()">
+        <button class="add-btn" onclick="addProfile()">＋ 追加</button>
+      </div>
+      <div class="profile-list" id="profile-list"></div>
+      <button class="pm-close" onclick="closeProfile()">閉じる</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('flash')" id="tab-flash"><span class="ico">🃏</span>単語カード</button>
+    <button class="tab-btn" onclick="showTab('quiz')" id="tab-quiz"><span class="ico">❓</span>クイズ</button>
+    <button class="tab-btn" onclick="showTab('listen')" id="tab-listen"><span class="ico">🔊</span>発音</button>
+    <button class="tab-btn" onclick="showTab('mastery')" id="tab-mastery"><span class="ico">📊</span>進捗</button>
+  </div>
+
+  <!-- FLASHCARD -->
+  <div id="screen-flash" class="screen visible">
+    <div class="stage-header">
+      <h2>ステージ:</h2>
+      <div class="stage-scroll" id="fc-stages"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-l">覚えた</div><div class="stat-v" id="fc-ok" style="color:#38a169">0</div></div>
+      <div class="stat"><div class="stat-l">残り</div><div class="stat-v" id="fc-left">-</div></div>
+      <div class="stat"><div class="stat-l">このST</div><div class="stat-v" id="fc-total">-</div></div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="fc-prog" style="width:0%"></div></div>
+      <div class="prog-label"><span id="fc-pl">0 / 0</span><span id="fc-pr">0%</span></div>
+    </div>
+    <div class="fc-wrap" onclick="flip()">
+      <div class="fc" id="fc">
+        <div class="face face-front">
+          <div class="fc-stage" id="fc-stag">STAGE 7-1</div>
+          <div class="fc-word" id="fc-word">dish</div>
+          <button class="spk-btn" id="fc-spk" onclick="event.stopPropagation();spkEl('fc-word','fc-spk',0.8)">🔊 聴く</button>
+          <div class="hint">タップして意味を見る 👆</div>
+        </div>
+        <div class="face face-back">
+          <div class="fc-m" id="fc-m">料理</div>
+          <div class="fc-ex" id="fc-ex">I wash the dish.</div>
+          <button class="spk-sm" id="fc-spk2" onclick="event.stopPropagation();spkEl('fc-ex','fc-spk2',0.75)">🔊 例文を聴く</button>
+          <div class="hint">もう一度タップで戻る</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-btns">
+      <button class="btn btn-again" onclick="skipCard()">✗ もう一度</button>
+      <button class="btn btn-got" onclick="gotCard()">✓ 覚えた!</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div id="q-setup">
+      <div class="setup-card">
+        <div class="setup-label">出題モード</div>
+        <div class="mode-row" style="flex-wrap:wrap">
+          <button class="mode-btn active" id="qm-stage" onclick="setQMode('stage')">📂 ステージ別<br><span style="font-size:11px;font-weight:400">選んだSTのみ</span></button>
+          <button class="mode-btn" id="qm-all" onclick="setQMode('all')">🎲 全ステージ<br><span style="font-size:11px;font-weight:400">ランダム全単語</span></button>
+          <button class="mode-btn" id="qm-prog" onclick="setQMode('prog')">📊 進捗別<br><span style="font-size:11px;font-weight:400">苦手・未学習など</span></button>
+        </div>
+
+        <!-- ステージ選択（stage モード時） -->
+        <div id="q-stage-select">
+          <div class="setup-label">ステージ選択</div>
+          <div class="stage-scroll" id="q-stages" style="margin-bottom:14px"></div>
+        </div>
+
+        <!-- 進捗フィルター（prog モード時） -->
+        <div id="q-prog-select" style="display:none">
+          <div class="setup-label">進捗フィルター</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="q-prog-filters">
+            <button class="flt on" onclick="setQProgFlt('none',this)">⚪ 未学習</button>
+            <button class="flt" onclick="setQProgFlt('learn',this)">🟡 学習中</button>
+            <button class="flt" onclick="setQProgFlt('ok',this)">🟢 できた</button>
+            <button class="flt" onclick="setQProgFlt('master',this)">🟣 マスター</button>
+            <button class="flt" onclick="setQProgFlt('weak',this)">❌ 間違えた</button>
+          </div>
+        </div>
+
+        <div class="setup-label">問題数</div>
+        <div class="cnt-row">
+          <button class="cnt-btn" onclick="setQCnt(10)">10問</button>
+          <button class="cnt-btn active" onclick="setQCnt(15)">15問</button>
+          <button class="cnt-btn" onclick="setQCnt(20)">20問</button>
+          <button class="cnt-btn" onclick="setQCnt(30)">30問</button>
+        </div>
+        <div class="setup-info" id="q-info">選択中のステージから15問出題</div>
+        <button class="btn btn-next" onclick="startQuiz()" style="width:100%;padding:13px;font-size:15px">クイズを始める ▶</button>
+      </div>
+    </div>
+
+    <div id="q-main" style="display:none">
+      <div class="stats">
+        <div class="stat"><div class="stat-l">正解</div><div class="stat-v" id="q-c" style="color:#38a169">0</div></div>
+        <div class="stat"><div class="stat-l">問題</div><div class="stat-v" id="q-n">1</div></div>
+        <div class="stat"><div class="stat-l">全問題</div><div class="stat-v" id="q-tot">15</div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="q-prog" style="width:0%"></div></div>
+        <div class="prog-label"><span id="q-lbl" style="color:#4f6ef7;font-weight:600"></span><span></span></div>
+      </div>
+      <div id="q-area">
+        <div class="q-header">
+          <div class="q-word" id="q-word">dish</div>
+          <button class="spk-sm" id="q-spk" onclick="spkEl('q-word','q-spk',0.8)">🔊</button>
+        </div>
+        <div class="q-sub">の日本語の意味は？</div>
+        <div class="choices" id="choices"></div>
+        <div class="fb" id="fb"></div>
+        <button class="btn btn-next" id="q-nxt" onclick="nextQ()" style="display:none">次の問題 →</button>
+      </div>
+    </div>
+
+    <div id="q-res" style="display:none">
+      <div class="res-wrap">
+        <div class="r-em" id="r-em">🎉</div>
+        <div class="r-ti" id="r-ti">すばらしい!</div>
+        <div class="r-su" id="r-su"></div>
+        <div id="q-wrong-list" style="text-align:left;margin:0 0 14px;max-height:180px;overflow-y:auto"></div>
+        <div class="r-btns">
+          <button class="btn btn-next" onclick="startQuiz()" style="padding:11px 20px">もう一度 ↺</button>
+          <button class="btn btn-outline" onclick="backToSetup()" style="padding:11px 20px">設定 ⚙</button>
+          <button class="btn btn-outline" onclick="showTab('mastery')" style="padding:11px 20px">進捗 📊</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTEN -->
+  <div id="screen-listen" class="screen">
+    <div class="stage-header">
+      <h2>ステージ:</h2>
+      <div class="stage-scroll" id="lp-stages"></div>
+    </div>
+    <div class="lcard">
+      <button class="play-big" id="lp-btn" onclick="lspk()">▶</button>
+      <div class="lw-word" id="lp-w">dish</div>
+      <div class="lw-m" id="lp-m">料理</div>
+      <div class="lw-ex" id="lp-ex">I wash the dish.</div>
+      <button class="spk-sm" id="lp-exspk" onclick="spkEl('lp-ex','lp-exspk',0.75)">🔊 例文を聴く</button>
+    </div>
+    <div class="card-btns">
+      <button class="btn btn-outline" onclick="lpPrev()">← 前へ</button>
+      <button class="btn btn-next" onclick="lpNext()">次へ →</button>
+    </div>
+    <div class="sec-title">単語一覧</div>
+    <div class="wgrid" id="wlist"></div>
+  </div>
+
+  <!-- MASTERY -->
+  <div id="screen-mastery" class="screen">
+    <div class="stats">
+      <div class="stat"><div class="stat-l">未学習</div><div class="stat-v" id="m-none" style="color:#4f6ef7">0</div></div>
+      <div class="stat"><div class="stat-l">学習中</div><div class="stat-v" id="m-learn" style="color:#d97706">0</div></div>
+      <div class="stat"><div class="stat-l">できた</div><div class="stat-v" id="m-ok" style="color:#38a169">0</div></div>
+      <div class="stat"><div class="stat-l">マスター</div><div class="stat-v" id="m-master" style="color:#7c3aed">0</div></div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="m-prog" style="width:0%"></div></div>
+      <div class="prog-label"><span>全体マスター進捗</span><span id="m-pr">0%</span></div>
+    </div>
+    <div class="stage-header">
+      <h2>ステージ:</h2>
+      <div class="stage-scroll" id="m-stages"></div>
+    </div>
+    <div class="flt-row">
+      <button class="flt on" onclick="setMFlt('all',this)">すべて</button>
+      <button class="flt" onclick="setMFlt('none',this)">未学習</button>
+      <button class="flt" onclick="setMFlt('learn',this)">学習中</button>
+      <button class="flt" onclick="setMFlt('ok',this)">できた</button>
+      <button class="flt" onclick="setMFlt('master',this)">マスター</button>
+    </div>
+    <div class="mgrid" id="mgrid"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-reset" onclick="if(confirm('この生徒の進捗をリセットしますか？'))resetProg()">🔄 この生徒の進捗をリセット</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// WORD DATA — Stage based
+// ============================================================
+const STAGES_DATA = {
+  "1-1": [
+    {w:"cat",m:"ねこ",ex:"I have a cat."},
+    {w:"big",m:"大きい",ex:"The elephant is big."},
+    {w:"cold",m:"つめたい・さむい",ex:"It is cold today."},
+    {w:"clean",m:"きれいな・掃除する",ex:"Clean your room."},
+    {w:"car",m:"車",ex:"Dad drives a car."},
+    {w:"nice",m:"すてきな",ex:"What a nice day!"},
+    {w:"come",m:"くる",ex:"Come here!"},
+    {w:"cook",m:"料理する",ex:"Mom cooks dinner."},
+    {w:"dog",m:"犬",ex:"I have a dog."},
+    {w:"down",m:"下に",ex:"Sit down please."},
+    {w:"eat",m:"たべる",ex:"I eat breakfast."},
+    {w:"wall",m:"壁",ex:"The wall is white."},
+    {w:"father",m:"父",ex:"My father is kind."},
+    {w:"fine",m:"元気な・よい",ex:"I am fine, thank you."},
+    {w:"fish",m:"魚",ex:"I like fish."},
+    {w:"bird",m:"鳥",ex:"A bird is singing."},
+    {w:"bike",m:"自転車",ex:"I ride a bike."},
+    {w:"pig",m:"ブタ",ex:"A pig is pink."},
+    {w:"rabbit",m:"ウサギ",ex:"My rabbit is white."},
+    {w:"animal",m:"動物",ex:"I love animals."},
+  ],
+  "1-2": [
+    {w:"good",m:"よい",ex:"That is a good idea."},
+    {w:"tomato",m:"トマト",ex:"Tomatoes are red."},
+    {w:"banana",m:"バナナ",ex:"I like bananas."},
+    {w:"head",m:"頭",ex:"Pat on the head."},
+    {w:"potato",m:"じゃがいも",ex:"I like potato chips."},
+    {w:"house",m:"家",ex:"My house is big."},
+    {w:"math",m:"算数・数学",ex:"Math is fun."},
+    {w:"May",m:"5月",ex:"May is spring."},
+    {w:"mother",m:"母",ex:"My mother cooks well."},
+    {w:"pizza",m:"ピザ",ex:"I love pizza!"},
+    {w:"mouth",m:"口",ex:"Open your mouth."},
+    {w:"music",m:"音楽",ex:"I love music."},
+    {w:"park",m:"公園",ex:"Let's play in the park."},
+    {w:"rice",m:"米",ex:"Rice is staple food."},
+    {w:"up",m:"上に",ex:"Look up!"},
+    {w:"fruit",m:"果物",ex:"Fruits are healthy."},
+    {w:"hair",m:"髪の毛",ex:"She has long hair."},
+    {w:"brother",m:"兄・弟",ex:"My brother is tall."},
+    {w:"food",m:"食べ物",ex:"I like Japanese food."},
+    {w:"happy",m:"幸せな・うれしい",ex:"I am happy today."},
+  ],
+  "1-3": [
+    {w:"sister",m:"姉・妹",ex:"My sister is cute."},
+    {w:"pencil",m:"えんぴつ",ex:"Use a pencil."},
+    {w:"speak",m:"話す",ex:"I speak English."},
+    {w:"tennis",m:"テニス",ex:"I play tennis."},
+    {w:"student",m:"学生・生徒",ex:"He is a good student."},
+    {w:"study",m:"勉強する",ex:"I study every day."},
+    {w:"swim",m:"泳ぐ",ex:"I swim every Sunday."},
+    {w:"tea",m:"お茶",ex:"I drink tea."},
+    {w:"teacher",m:"先生",ex:"She is my teacher."},
+    {w:"watch",m:"見る",ex:"I watch TV at night."},
+    {w:"favorite",m:"お気に入りの",ex:"My favorite subject is art."},
+    {w:"bank",m:"銀行",ex:"Go to the bank."},
+    {w:"basketball",m:"バスケットボール",ex:"I play basketball."},
+    {w:"baseball",m:"野球",ex:"Baseball is popular."},
+    {w:"bookstore",m:"本屋",ex:"Buy books at the bookstore."},
+    {w:"sleepy",m:"眠い",ex:"I am sleepy."},
+    {w:"sing",m:"歌う",ex:"She sings well."},
+    {w:"book",m:"本",ex:"I read a book."},
+    {w:"science",m:"科学・理科",ex:"I like science."},
+    {w:"school",m:"学校",ex:"I go to school."},
+  ],
+  "2-1": [
+    {w:"evening",m:"夕方",ex:"Good evening!"},
+    {w:"beautiful",m:"美しい",ex:"The flower is beautiful."},
+    {w:"chair",m:"いす",ex:"Sit on the chair."},
+    {w:"hand",m:"手",ex:"Raise your hand."},
+    {w:"light",m:"明かり",ex:"Turn on the light."},
+    {w:"doctor",m:"医者",ex:"I want to be a doctor."},
+    {w:"soccer",m:"サッカー",ex:"Let's play soccer!"},
+    {w:"river",m:"川",ex:"Fish in the river."},
+    {w:"sea",m:"海",ex:"I swim in the sea."},
+    {w:"supermarket",m:"スーパーマーケット",ex:"Shop at the supermarket."},
+    {w:"grandfather",m:"祖父",ex:"My grandfather is kind."},
+    {w:"train",m:"電車",ex:"I take the train."},
+    {w:"tree",m:"木",ex:"Climb the tree."},
+    {w:"foot",m:"足",ex:"My foot hurts."},
+    {w:"April",m:"4月",ex:"April is warm."},
+    {w:"flower",m:"花",ex:"Flowers are beautiful."},
+    {w:"hungry",m:"お腹がすいた",ex:"I am hungry."},
+    {w:"small",m:"小さい",ex:"A mouse is small."},
+    {w:"friend",m:"ともだち",ex:"She is my best friend."},
+    {w:"monkey",m:"サル",ex:"Monkeys climb trees."},
+  ],
+  "2-2": [
+    {w:"August",m:"8月",ex:"August is summer."},
+    {w:"Australia",m:"オーストラリア",ex:"Australia is big."},
+    {w:"bathroom",m:"浴室・トイレ",ex:"The bathroom is clean."},
+    {w:"black",m:"黒",ex:"The night is black."},
+    {w:"box",m:"箱",ex:"Put it in the box."},
+    {w:"boy",m:"男の子",ex:"He is a good boy."},
+    {w:"shop",m:"お店",ex:"Go to the shop."},
+    {w:"cake",m:"ケーキ",ex:"I love birthday cake."},
+    {w:"country",m:"国",ex:"Japan is my country."},
+    {w:"bus",m:"バス",ex:"I go by bus."},
+    {w:"December",m:"12月",ex:"December is winter."},
+    {w:"desk",m:"勉強机",ex:"My desk is messy."},
+    {w:"door",m:"ドア",ex:"Open the door."},
+    {w:"ear",m:"耳",ex:"I have two ears."},
+    {w:"taxi",m:"タクシー",ex:"Take a taxi."},
+    {w:"look",m:"見る",ex:"Look at the bird."},
+    {w:"busy",m:"いそがしい",ex:"I am busy today."},
+    {w:"drink",m:"飲む",ex:"I drink milk."},
+    {w:"birthday",m:"誕生日",ex:"Happy birthday!"},
+    {w:"elephant",m:"ゾウ",ex:"Elephants are big."},
+  ],
+  "2-3": [
+    {w:"English",m:"英語",ex:"I speak English."},
+    {w:"cap",m:"ふちなしの帽子",ex:"I wear a cap."},
+    {w:"face",m:"顔",ex:"Wash your face."},
+    {w:"water",m:"水",ex:"Drink water."},
+    {w:"finger",m:"指",ex:"Count on your fingers."},
+    {w:"sandwich",m:"サンドイッチ",ex:"I eat a sandwich."},
+    {w:"shoulder",m:"肩",ex:"I hurt my shoulder."},
+    {w:"cup",m:"カップ",ex:"A cup of tea."},
+    {w:"get",m:"手に入れる",ex:"I get a present."},
+    {w:"girl",m:"女の子",ex:"She is a nice girl."},
+    {w:"go",m:"行く",ex:"Let's go to school."},
+    {w:"grandmother",m:"祖母",ex:"My grandmother is 70."},
+    {w:"have",m:"持っている",ex:"I have a dog."},
+    {w:"help",m:"助ける",ex:"Can you help me?"},
+    {w:"high",m:"高い",ex:"The sky is high."},
+    {w:"this",m:"これ",ex:"This is my bag."},
+    {w:"Japan",m:"日本",ex:"I live in Japan."},
+    {w:"Japanese",m:"日本語・日本人",ex:"She speaks Japanese."},
+    {w:"juice",m:"ジュース",ex:"Orange juice is good."},
+    {w:"play",m:"遊ぶ",ex:"Let's play outside!"},
+  ],
+  "3-1": [
+    {w:"jump",m:"とびあがる",ex:"Jump high!"},
+    {w:"like",m:"好き",ex:"I like cats."},
+    {w:"make",m:"作る",ex:"I make a cake."},
+    {w:"man",m:"男の人",ex:"He is a kind man."},
+    {w:"March",m:"3月",ex:"March is spring."},
+    {w:"brown",m:"茶色",ex:"The bear is brown."},
+    {w:"library",m:"図書館",ex:"Read books at the library."},
+    {w:"month",m:"ひと月",ex:"One month has 30 days."},
+    {w:"new",m:"新しい",ex:"I have a new bag."},
+    {w:"treasure",m:"宝物",ex:"I found a treasure."},
+    {w:"short",m:"短い・背が低い",ex:"The pencil is short."},
+    {w:"old",m:"古い・年取った",ex:"This is an old book."},
+    {w:"class",m:"クラス・組",ex:"My class is 6A."},
+    {w:"mountain",m:"山",ex:"Climb the mountain."},
+    {w:"cheese",m:"チーズ",ex:"I like cheese."},
+    {w:"pocket",m:"ポケット",ex:"Put it in your pocket."},
+    {w:"spoon",m:"スプーン",ex:"Use a spoon."},
+    {w:"actor",m:"俳優",ex:"He is a famous actor."},
+    {w:"color",m:"色",ex:"What color is it?"},
+    {w:"sky",m:"空",ex:"The sky is blue."},
+  ],
+  "3-2": [
+    {w:"November",m:"11月",ex:"November is cold."},
+    {w:"July",m:"7月",ex:"July is hot."},
+    {w:"January",m:"1月",ex:"January is the first month."},
+    {w:"read",m:"読む",ex:"I read a book."},
+    {w:"ride",m:"乗る",ex:"I ride a bike."},
+    {w:"right",m:"右",ex:"Turn to the right."},
+    {w:"room",m:"部屋",ex:"My room is small."},
+    {w:"Saturday",m:"土曜日",ex:"I play on Saturday."},
+    {w:"see",m:"見る・見える",ex:"I can see the sea."},
+    {w:"September",m:"9月",ex:"September is fall."},
+    {w:"stop",m:"止まる",ex:"Stop talking."},
+    {w:"October",m:"10月",ex:"October is cool."},
+    {w:"street",m:"道",ex:"Cross the street."},
+    {w:"soup",m:"スープ",ex:"Soup is warm."},
+    {w:"sweet",m:"甘い",ex:"Candy is sweet."},
+    {w:"kitchen",m:"台所・キッチン",ex:"Mom is in the kitchen."},
+    {w:"restaurant",m:"レストラン",ex:"Let's eat at a restaurant."},
+    {w:"singer",m:"歌手",ex:"She is a great singer."},
+    {w:"run",m:"走る",ex:"I run every morning."},
+    {w:"year",m:"年",ex:"Happy New Year!"},
+  ],
+  "3-3": [
+    {w:"afternoon",m:"午後",ex:"See you in the afternoon."},
+    {w:"tall",m:"高い・背が高い",ex:"He is tall."},
+    {w:"Thursday",m:"木曜日",ex:"I have P.E. on Thursday."},
+    {w:"know",m:"知っている",ex:"I know his name."},
+    {w:"shape",m:"形",ex:"What shape is it?"},
+    {w:"toy",m:"おもちゃ",ex:"I play with a toy."},
+    {w:"autumn",m:"秋",ex:"Autumn leaves are red."},
+    {w:"fall",m:"落ちる・秋",ex:"Leaves fall in autumn."},
+    {w:"dinner",m:"夕食",ex:"Dinner is at 6."},
+    {w:"teach",m:"教える",ex:"She teaches English."},
+    {w:"doll",m:"人形",ex:"I have a doll."},
+    {w:"woman",m:"女性",ex:"She is a kind woman."},
+    {w:"write",m:"書く",ex:"Write your name."},
+    {w:"soft",m:"やわらかい",ex:"This pillow is soft."},
+    {w:"forest",m:"森",ex:"The forest is green."},
+    {w:"summer",m:"夏",ex:"I love summer."},
+    {w:"spring",m:"春",ex:"Spring is warm."},
+    {w:"winter",m:"冬",ex:"Winter is cold."},
+    {w:"think",m:"考える・思う",ex:"I think it's good."},
+    {w:"season",m:"季節",ex:"My favorite season is spring."},
+  ],
+  "4-1": [
+    {w:"bag",m:"かばん",ex:"I carry a bag."},
+    {w:"Sunday",m:"日曜日",ex:"I rest on Sunday."},
+    {w:"air",m:"空気",ex:"The air is fresh."},
+    {w:"ball",m:"ボール",ex:"Kick the ball!"},
+    {w:"hospital",m:"病院",ex:"Go to the hospital."},
+    {w:"beach",m:"ビーチ・海岸",ex:"Play at the beach."},
+    {w:"bedroom",m:"寝室",ex:"My bedroom is cozy."},
+    {w:"breakfast",m:"朝食",ex:"I eat breakfast at 7."},
+    {w:"Monday",m:"月曜日",ex:"Monday is busy."},
+    {w:"Friday",m:"金曜日",ex:"Friday is fun!"},
+    {w:"Canada",m:"カナダ",ex:"Canada is cold."},
+    {w:"city",m:"市",ex:"I live in the city."},
+    {w:"Tuesday",m:"火曜日",ex:"Tuesday is the 2nd day."},
+    {w:"cute",m:"かわいい",ex:"The kitten is cute."},
+    {w:"Wednesday",m:"水曜日",ex:"Wednesday is midweek."},
+    {w:"apple",m:"りんご",ex:"An apple a day is good."},
+    {w:"bridge",m:"橋",ex:"Cross the bridge."},
+    {w:"dictionary",m:"辞書",ex:"Look in the dictionary."},
+    {w:"clock",m:"置時計・壁時計",ex:"Look at the clock."},
+    {w:"week",m:"週",ex:"One week has 7 days."},
+  ],
+  "4-2": [
+    {w:"window",m:"窓",ex:"Open the window."},
+    {w:"T-shirt",m:"Tシャツ",ex:"I wear a T-shirt."},
+    {w:"February",m:"2月",ex:"February is short."},
+    {w:"zoo",m:"動物園",ex:"Let's go to the zoo."},
+    {w:"after",m:"〜の後で",ex:"After school I play."},
+    {w:"bed",m:"ベッド",ex:"Go to bed early."},
+    {w:"gym",m:"体育館・ジム",ex:"We play in the gym."},
+    {w:"leg",m:"足（ひざから足首）",ex:"My legs are long."},
+    {w:"morning",m:"朝・午前中",ex:"Good morning!"},
+    {w:"museum",m:"博物館・美術館",ex:"Visit the museum."},
+    {w:"before",m:"〜の前に",ex:"Wash hands before eating."},
+    {w:"notebook",m:"ノート",ex:"Write in your notebook."},
+    {w:"nurse",m:"看護師",ex:"The nurse is kind."},
+    {w:"piano",m:"ピアノ",ex:"I play the piano."},
+    {w:"salad",m:"サラダ",ex:"I eat a salad."},
+    {w:"eraser",m:"消しゴム",ex:"I need an eraser."},
+    {w:"hat",m:"ふちのある帽子",ex:"She wears a hat."},
+    {w:"milk",m:"牛乳",ex:"Drink milk every day."},
+    {w:"garden",m:"庭",ex:"We play in the garden."},
+    {w:"pilot",m:"操縦者",ex:"He is a pilot."},
+  ],
+  "4-3": [
+    {w:"one",m:"1",ex:"I have one cat."},
+    {w:"two",m:"2",ex:"Two apples."},
+    {w:"three",m:"3",ex:"Three birds."},
+    {w:"four",m:"4",ex:"Four seasons."},
+    {w:"five",m:"5",ex:"Five fingers."},
+    {w:"six",m:"6",ex:"Six days."},
+    {w:"seven",m:"7",ex:"Seven colors."},
+    {w:"eight",m:"8",ex:"Eight legs."},
+    {w:"nine",m:"9",ex:"Nine lives."},
+    {w:"ten",m:"10",ex:"Ten fingers."},
+    {w:"eleven",m:"11",ex:"Eleven players."},
+    {w:"twelve",m:"12",ex:"Twelve months."},
+    {w:"thirteen",m:"13",ex:"Thirteen items."},
+    {w:"fourteen",m:"14",ex:"Fourteen days."},
+    {w:"fifteen",m:"15",ex:"Fifteen minutes."},
+    {w:"sixteen",m:"16",ex:"Sixteen years old."},
+    {w:"seventeen",m:"17",ex:"Seventeen students."},
+    {w:"eighteen",m:"18",ex:"Eighteen holes."},
+    {w:"nineteen",m:"19",ex:"Nineteen birds."},
+    {w:"twenty",m:"20",ex:"Twenty questions."},
+  ],
+  "5-1": [
+    {w:"thirty",m:"30",ex:"Thirty days."},
+    {w:"forty",m:"40",ex:"Forty winks."},
+    {w:"fifty",m:"50",ex:"Fifty years."},
+    {w:"sixty",m:"60",ex:"Sixty seconds."},
+    {w:"seventy",m:"70",ex:"Seventy years old."},
+    {w:"eighty",m:"80",ex:"Eighty percent."},
+    {w:"ninety",m:"90",ex:"Ninety degrees."},
+    {w:"hundred",m:"100",ex:"One hundred yen."},
+    {w:"stand",m:"立つ",ex:"Stand up please."},
+    {w:"station",m:"駅",ex:"Meet me at the station."},
+    {w:"first",m:"1番目の・1日",ex:"January is the first month."},
+    {w:"second",m:"2番目の",ex:"I came in second place."},
+    {w:"third",m:"3番目の",ex:"This is the third day."},
+    {w:"fourth",m:"4番目の",ex:"The fourth floor."},
+    {w:"fifth",m:"5番目の",ex:"The fifth day."},
+    {w:"sixth",m:"6番目の",ex:"The sixth sense."},
+    {w:"seventh",m:"7番目の",ex:"The seventh day."},
+    {w:"eighth",m:"8番目の",ex:"The eighth wonder."},
+    {w:"ninth",m:"9番目の",ex:"The ninth inning."},
+    {w:"tenth",m:"10番目の",ex:"The tenth floor."},
+  ],
+  "5-2": [
+    {w:"TV",m:"テレビ",ex:"I watch TV at night."},
+    {w:"warm",m:"暖かい",ex:"Spring is warm."},
+    {w:"young",m:"若い・幼い",ex:"She is young."},
+    {w:"always",m:"いつも",ex:"I always brush my teeth."},
+    {w:"sugar",m:"砂糖",ex:"Add sugar to the tea."},
+    {w:"use",m:"使う",ex:"I use a computer."},
+    {w:"Brazil",m:"ブラジル",ex:"Brazil is in South America."},
+    {w:"bread",m:"パン",ex:"I eat bread for breakfast."},
+    {w:"chocolate",m:"チョコレート",ex:"I love chocolate."},
+    {w:"coffee",m:"コーヒー",ex:"Dad drinks coffee."},
+    {w:"dance",m:"踊る",ex:"I love to dance."},
+    {w:"day",m:"一日",ex:"Have a nice day!"},
+    {w:"easy",m:"簡単な",ex:"This is easy."},
+    {w:"family",m:"家族",ex:"I love my family."},
+    {w:"fast",m:"はやい",ex:"The car is fast."},
+    {w:"history",m:"歴史",ex:"I study history."},
+    {w:"buy",m:"買う",ex:"I buy a new bag."},
+    {w:"computer",m:"コンピューター",ex:"I use a computer."},
+    {w:"story",m:"物語・話",ex:"Tell me a story."},
+    {w:"cucumber",m:"きゅうり",ex:"I eat cucumber."},
+  ],
+  "5-3": [
+    {w:"hamburger",m:"ハンバーガー",ex:"I eat a hamburger."},
+    {w:"here",m:"ここ",ex:"Come here!"},
+    {w:"aquarium",m:"水族館",ex:"Let's go to the aquarium."},
+    {w:"how",m:"どうやって",ex:"How do you go to school?"},
+    {w:"baby",m:"赤ちゃん",ex:"The baby is cute."},
+    {w:"live",m:"生きる・住む",ex:"I live in Japan."},
+    {w:"long",m:"長い",ex:"The river is long."},
+    {w:"lunch",m:"昼食",ex:"Lunch is at noon."},
+    {w:"harmonica",m:"ハーモニカ",ex:"He plays harmonica."},
+    {w:"king",m:"王様",ex:"The king is kind."},
+    {w:"ship",m:"船",ex:"Sail on a ship."},
+    {w:"talk",m:"話す",ex:"Let's talk."},
+    {w:"that",m:"あれ",ex:"Look at that!"},
+    {w:"find",m:"見つける",ex:"Find the key."},
+    {w:"great",m:"すごい",ex:"That is great!"},
+    {w:"listen",m:"聞く",ex:"Listen carefully."},
+    {w:"walk",m:"歩く",ex:"I walk to school."},
+    {w:"picture",m:"写真・絵",ex:"Take a picture."},
+    {w:"practice",m:"練習",ex:"Practice every day."},
+    {w:"ruler",m:"定規",ex:"Use a ruler."},
+  ],
+  "6-1": [
+    {w:"uncle",m:"おじさん",ex:"My uncle is funny."},
+    {w:"under",m:"下に",ex:"The cat is under the table."},
+    {w:"aunt",m:"おばさん",ex:"My aunt is kind."},
+    {w:"usually",m:"たいてい",ex:"I usually wake up at 7."},
+    {w:"wash",m:"洗う",ex:"Wash your hands."},
+    {w:"airport",m:"空港",ex:"Go to the airport."},
+    {w:"backpack",m:"リュックサック",ex:"I carry a backpack."},
+    {w:"little",m:"小さな",ex:"A little bird."},
+    {w:"sunny",m:"晴れた",ex:"It is a sunny day!"},
+    {w:"rainy",m:"雨の",ex:"It is a rainy day."},
+    {w:"cloudy",m:"曇りの",ex:"It is cloudy today."},
+    {w:"sun",m:"太陽",ex:"The sun is bright."},
+    {w:"cloud",m:"雲",ex:"There are clouds."},
+    {w:"rain",m:"雨",ex:"It rains today."},
+    {w:"umbrella",m:"傘",ex:"I use an umbrella."},
+    {w:"large",m:"大きな・広い",ex:"The park is large."},
+    {w:"hot",m:"熱い・暑い",ex:"Summer is hot."},
+    {w:"cherry",m:"さくらんぼ",ex:"Cherries are sweet."},
+    {w:"idea",m:"アイディア・考え",ex:"That is a good idea."},
+    {w:"weather",m:"天気",ex:"What is the weather?"},
+  ],
+  "6-2": [
+    {w:"jacket",m:"ジャケット",ex:"I wear a jacket."},
+    {w:"ant",m:"蟻",ex:"Ants are small."},
+    {w:"number",m:"数字・番号",ex:"What is your number?"},
+    {w:"postcard",m:"葉書",ex:"I send a postcard."},
+    {w:"meet",m:"会う",ex:"I meet my friend."},
+    {w:"need",m:"必要とする",ex:"I need water."},
+    {w:"skirt",m:"スカート",ex:"She wears a skirt."},
+    {w:"open",m:"開く",ex:"Open the door please."},
+    {w:"weekend",m:"週末",ex:"I rest on weekends."},
+    {w:"badminton",m:"バドミントン",ex:"I play badminton."},
+    {w:"bear",m:"熊",ex:"A bear is big."},
+    {w:"camera",m:"カメラ",ex:"I have a camera."},
+    {w:"dentist",m:"歯医者",ex:"Go to the dentist."},
+    {w:"eye",m:"目",ex:"She has blue eyes."},
+    {w:"fishing",m:"釣り",ex:"I enjoy fishing."},
+    {w:"paint",m:"描く",ex:"She draws pictures."},
+    {w:"sad",m:"悲しい",ex:"I feel sad."},
+    {w:"cool",m:"かっこいい",ex:"He is cool."},
+    {w:"newspaper",m:"新聞紙",ex:"Read a newspaper."},
+    {w:"chicken",m:"鶏",ex:"I eat chicken."},
+  ],
+  "6-3": [
+    {w:"I",m:"私は",ex:"I am a student."},
+    {w:"my",m:"私の",ex:"This is my bag."},
+    {w:"me",m:"私を・私に",ex:"Give me a pen."},
+    {w:"you",m:"あなたは",ex:"You are kind."},
+    {w:"he",m:"彼は",ex:"He is tall."},
+    {w:"his",m:"彼の",ex:"That is his book."},
+    {w:"him",m:"彼を・彼に",ex:"I saw him."},
+    {w:"she",m:"彼女は",ex:"She is happy."},
+    {w:"her",m:"彼女の・彼女を",ex:"Give her the book."},
+    {w:"it",m:"それは",ex:"It is cold."},
+    {w:"its",m:"それの",ex:"Its tail is long."},
+    {w:"we",m:"私たちは",ex:"We are friends."},
+    {w:"our",m:"私たちの",ex:"This is our school."},
+    {w:"they",m:"彼らは",ex:"They are happy."},
+    {w:"them",m:"彼らを・彼らに",ex:"I like them."},
+    {w:"us",m:"私たちを・私たちに",ex:"Help us!"},
+    {w:"their",m:"彼らの",ex:"That is their house."},
+    {w:"mine",m:"私のもの",ex:"This is mine."},
+    {w:"your",m:"あなたの",ex:"Is this your pen?"},
+    {w:"yours",m:"あなたのもの",ex:"This is yours."},
+  ],
+  "7-1": [
+    {w:"dish",m:"料理",ex:"I wash the dish."},
+    {w:"owl",m:"ふくろう",ex:"The owl flies at night."},
+    {w:"bicycle",m:"自転車",ex:"I ride a bicycle."},
+    {w:"job",m:"仕事",ex:"What is your job?"},
+    {w:"magazine",m:"雑誌",ex:"I read a magazine."},
+    {w:"map",m:"地図",ex:"Look at the map."},
+    {w:"present",m:"プレゼント",ex:"I got a present."},
+    {w:"nose",m:"鼻",ex:"My nose is cold."},
+    {w:"pants",m:"パンツ",ex:"I wear pants."},
+    {w:"racket",m:"ラケット",ex:"I have a racket."},
+    {w:"peach",m:"桃",ex:"I like peaches."},
+    {w:"sheep",m:"羊",ex:"The sheep is white."},
+    {w:"put",m:"置く",ex:"Put it on the desk."},
+    {w:"shirt",m:"シャツ",ex:"I wear a shirt."},
+    {w:"slow",m:"遅い",ex:"The turtle is slow."},
+    {w:"snowy",m:"雪が降る",ex:"It is snowy today."},
+    {w:"softball",m:"ソフトボール",ex:"I play softball."},
+    {w:"night",m:"夜",ex:"Good night!"},
+    {w:"beef",m:"牛肉",ex:"I like beef."},
+    {w:"June",m:"6月",ex:"June is rainy."},
+  ],
+  "7-2": [
+    {w:"swimming",m:"水泳",ex:"I like swimming."},
+    {w:"table",m:"机",ex:"Put it on the table."},
+    {w:"tired",m:"疲れた",ex:"I am tired."},
+    {w:"sometimes",m:"時々",ex:"I sometimes eat cake."},
+    {w:"windy",m:"風の吹く",ex:"It is windy today."},
+    {w:"with",m:"〜と一緒に",ex:"I play with my friend."},
+    {w:"son",m:"息子",ex:"He is my son."},
+    {w:"about",m:"およそ",ex:"It is about 3 km."},
+    {w:"basket",m:"籠",ex:"Put it in the basket."},
+    {w:"bath",m:"風呂",ex:"I take a bath."},
+    {w:"close",m:"閉じる",ex:"Close the door."},
+    {w:"cookie",m:"クッキー",ex:"I eat a cookie."},
+    {w:"date",m:"日付",ex:"What is the date today?"},
+    {w:"dessert",m:"デザート",ex:"I like dessert."},
+    {w:"violin",m:"バイオリン",ex:"She plays violin."},
+    {w:"strawberry",m:"苺",ex:"Strawberry is sweet."},
+    {w:"carrot",m:"人参",ex:"Carrots are orange."},
+    {w:"strong",m:"強い",ex:"He is strong."},
+    {w:"but",m:"しかし",ex:"I like cats but not dogs."},
+  ],
+  "7-3": [
+    {w:"game",m:"ゲーム",ex:"Let's play a game."},
+    {w:"homework",m:"宿題",ex:"I do homework."},
+    {w:"letter",m:"手紙",ex:"I write a letter."},
+    {w:"love",m:"愛",ex:"I love my family."},
+    {w:"minute",m:"分",ex:"Wait 5 minutes."},
+    {w:"movie",m:"映画",ex:"Let's watch a movie."},
+    {w:"name",m:"名前",ex:"What is your name?"},
+    {w:"heart",m:"心",ex:"I love with my heart."},
+    {w:"party",m:"パーティー",ex:"I go to the party."},
+    {w:"people",m:"人々",ex:"Many people are here."},
+    {w:"pet",m:"ペット",ex:"I have a pet."},
+    {w:"ready",m:"準備ができている",ex:"Are you ready?"},
+    {w:"sleep",m:"眠る",ex:"I sleep at 10."},
+    {w:"song",m:"歌",ex:"I sing a song."},
+    {w:"glass",m:"ガラス",ex:"The glass is clear."},
+    {w:"start",m:"始める",ex:"Let's start!"},
+    {w:"grape",m:"ぶどう",ex:"I like grapes."},
+    {w:"time",m:"時間",ex:"What time is it?"},
+    {w:"flute",m:"フルート",ex:"She plays flute."},
+    {w:"take",m:"取る",ex:"Take your bag."},
+  ],
+  "8-1": [
+    {w:"today",m:"今日",ex:"What day is today?"},
+    {w:"tomorrow",m:"明日",ex:"See you tomorrow!"},
+    {w:"well",m:"上手に",ex:"She sings well."},
+    {w:"work",m:"仕事",ex:"He works hard."},
+    {w:"can",m:"できる",ex:"I can swim."},
+    {w:"children",m:"子どもたち",ex:"Children play outside."},
+    {w:"classmate",m:"同級生",ex:"She is my classmate."},
+    {w:"classroom",m:"教室",ex:"Clean the classroom."},
+    {w:"daughter",m:"娘",ex:"She is my daughter."},
+    {w:"difficult",m:"難しい",ex:"Math is difficult."},
+    {w:"draw",m:"描く",ex:"She draws pictures."},
+    {w:"enjoy",m:"楽しむ",ex:"I enjoy music."},
+    {w:"fun",m:"楽しい",ex:"It is fun!"},
+    {w:"glove",m:"手袋",ex:"I wear gloves."},
+    {w:"guitar",m:"ギター",ex:"He plays guitar."},
+    {w:"farmer",m:"農家",ex:"He is a farmer."},
+    {w:"free",m:"自由な",ex:"Are you free today?"},
+    {w:"hard",m:"硬い",ex:"The rock is hard."},
+    {w:"world",m:"世界",ex:"The world is big."},
+    {w:"fantastic",m:"素晴らしい",ex:"It is fantastic!"},
+  ],
+  "8-2": [
+    {w:"home",m:"家",ex:"I go home at 5."},
+    {w:"wolf",m:"狼",ex:"The wolf howls."},
+    {w:"onion",m:"玉ねぎ",ex:"Onions make me cry."},
+    {w:"ours",m:"私たちのもの",ex:"This is ours."},
+    {w:"pie",m:"パイ",ex:"I eat a pie."},
+    {w:"P.E.",m:"体育",ex:"I like P.E."},
+    {w:"quiet",m:"静かな",ex:"Please be quiet."},
+    {w:"subject",m:"教科",ex:"My favorite subject is math."},
+    {w:"lesson",m:"授業",ex:"The lesson starts at 8."},
+    {w:"textbook",m:"教科書",ex:"Open your textbook."},
+    {w:"theirs",m:"彼らのもの",ex:"This is theirs."},
+    {w:"there",m:"あそこ",ex:"Look over there."},
+    {w:"tiger",m:"虎",ex:"The tiger is strong."},
+    {w:"smile",m:"笑顔",ex:"Her smile is beautiful."},
+    {w:"camp",m:"キャンプ",ex:"I go camping."},
+    {w:"hers",m:"彼女のもの",ex:"This bag is hers."},
+    {w:"often",m:"よく",ex:"I often eat pizza."},
+    {w:"pianist",m:"ピアニスト",ex:"She is a pianist."},
+    {w:"pumpkin",m:"南瓜",ex:"Pumpkins are orange."},
+    {w:"scientist",m:"科学者",ex:"He is a scientist."},
+  ],
+  "8-3": [
+    {w:"around",m:"〜の周り",ex:"Look around you."},
+    {w:"blackboard",m:"黒板",ex:"Write on the blackboard."},
+    {w:"concert",m:"演奏会",ex:"I go to a concert."},
+    {w:"e-mail",m:"電子メール",ex:"Send an e-mail."},
+    {w:"everyone",m:"みんな",ex:"Everyone is here."},
+    {w:"festival",m:"祭り",ex:"I go to the festival."},
+    {w:"give",m:"与える",ex:"Give me a pen."},
+    {w:"hour",m:"時間",ex:"One hour is 60 minutes."},
+    {w:"jam",m:"ジャム",ex:"I put jam on bread."},
+    {w:"last",m:"最後の",ex:"This is the last one."},
+    {w:"vacation",m:"休暇",ex:"I enjoy vacation."},
+    {w:"office",m:"事務所",ex:"He works at an office."},
+    {w:"plane",m:"飛行機",ex:"I go by plane."},
+    {w:"pretty",m:"かわいい",ex:"She is pretty."},
+    {w:"shopping",m:"買い物",ex:"Let's go shopping."},
+    {w:"egg",m:"卵",ex:"I eat an egg."},
+    {w:"noon",m:"正午",ex:"Eat lunch at noon."},
+    {w:"plate",m:"皿",ex:"Put it on the plate."},
+    {w:"and",m:"〜と",ex:"I have a cat and a dog."},
+    {w:"cut",m:"切る",ex:"Cut the paper."},
+  ],
+  "9-1": [
+    {w:"ski",m:"スキー",ex:"I ski in winter."},
+    {w:"snow",m:"雪",ex:"It snows in winter."},
+    {w:"musician",m:"音楽家",ex:"He is a musician."},
+    {w:"test",m:"試験",ex:"I have a test today."},
+    {w:"thousand",m:"千",ex:"One thousand yen."},
+    {w:"artist",m:"芸術家",ex:"She is an artist."},
+    {w:"butterfly",m:"蝶",ex:"A butterfly is flying."},
+    {w:"China",m:"中国",ex:"China is big."},
+    {w:"cousin",m:"いとこ",ex:"She is my cousin."},
+    {w:"different",m:"違う",ex:"We are different."},
+    {w:"Egypt",m:"エジプト",ex:"Egypt is hot."},
+    {w:"excited",m:"わくわくする",ex:"I am excited."},
+    {w:"fly",m:"飛ぶ",ex:"Birds fly high."},
+    {w:"France",m:"フランス",ex:"France is beautiful."},
+    {w:"French",m:"フランス語",ex:"She speaks French."},
+    {w:"photo",m:"写真",ex:"Take a photo."},
+    {w:"angry",m:"怒っている",ex:"He is angry."},
+    {w:"heavy",m:"重い",ex:"The box is heavy."},
+    {w:"America",m:"アメリカ",ex:"America is large."},
+    {w:"horse",m:"馬",ex:"I ride a horse."},
+  ],
+  "9-2": [
+    {w:"meat",m:"肉",ex:"I like meat."},
+    {w:"mouse",m:"ネズミ",ex:"The mouse is small."},
+    {w:"pond",m:"池",ex:"There is a pond."},
+    {w:"pork",m:"豚肉",ex:"I eat pork."},
+    {w:"snack",m:"軽食",ex:"I eat a snack."},
+    {w:"star",m:"星",ex:"Stars shine at night."},
+    {w:"astronaut",m:"宇宙飛行士",ex:"He is an astronaut."},
+    {w:"zero",m:"零",ex:"Zero is nothing."},
+    {w:"art",m:"芸術",ex:"I love art."},
+    {w:"bench",m:"長椅子",ex:"Sit on the bench."},
+    {w:"calendar",m:"カレンダー",ex:"Look at the calendar."},
+    {w:"card",m:"カード",ex:"I send a card."},
+    {w:"coin",m:"硬貨",ex:"I have a coin."},
+    {w:"dream",m:"夢",ex:"I have a dream."},
+    {w:"football",m:"フットボール",ex:"I play football."},
+    {w:"melon",m:"メロン",ex:"I like melon."},
+    {w:"wonderful",m:"素晴らしい",ex:"It is wonderful!"},
+    {w:"diary",m:"日記",ex:"I write a diary."},
+    {w:"Korea",m:"韓国",ex:"Korea is near Japan."},
+  ],
+  "9-3": [
+    {w:"what",m:"何",ex:"What is this?"},
+    {w:"when",m:"いつ",ex:"When is your birthday?"},
+    {w:"where",m:"どこ",ex:"Where is my dog?"},
+    {w:"who",m:"だれ",ex:"Who are you?"},
+    {w:"whose",m:"だれの",ex:"Whose bag is this?"},
+    {w:"show",m:"見せる",ex:"Show me your homework."},
+    {w:"sofa",m:"ソファー",ex:"Sit on the sofa."},
+    {w:"tell",m:"伝える",ex:"Tell me your name."},
+    {w:"ticket",m:"チケット",ex:"Buy a ticket."},
+    {w:"now",m:"今",ex:"I am eating now."},
+    {w:"very",m:"とても",ex:"I am very happy."},
+    {w:"parent",m:"親",ex:"My parent is kind."},
+    {w:"many",m:"たくさんの",ex:"Many people are here."},
+    {w:"really",m:"本当に",ex:"Really? That's great!"},
+    {w:"delicious",m:"おいしい",ex:"This is delicious!"},
+    {w:"why",m:"なぜ",ex:"Why are you sad?"},
+    {w:"then",m:"その時",ex:"See you then."},
+    {w:"knife",m:"ナイフ",ex:"Use a knife."},
+    {w:"which",m:"どちら",ex:"Which do you like?"},
+    {w:"question",m:"質問",ex:"Do you have a question?"},
+  ],
+  "10-1": [
+    {w:"ham",m:"ハム",ex:"I eat ham."},
+    {w:"India",m:"インド",ex:"India is colorful."},
+    {w:"interesting",m:"興味深い",ex:"This book is interesting."},
+    {w:"Italy",m:"イタリア",ex:"I want to go to Italy."},
+    {w:"kind",m:"親切な",ex:"She is kind."},
+    {w:"knee",m:"ひざ",ex:"My knee hurts."},
+    {w:"lake",m:"湖",ex:"There is a lake."},
+    {w:"nut",m:"木の実",ex:"Squirrels eat nuts."},
+    {w:"playground",m:"校庭",ex:"Play in the playground."},
+    {w:"rainbow",m:"虹",ex:"A rainbow appears."},
+    {w:"scissors",m:"はさみ",ex:"Use scissors."},
+    {w:"spaghetti",m:"スパゲッティ",ex:"I love spaghetti."},
+    {w:"spider",m:"くも",ex:"A spider spins a web."},
+    {w:"teeth",m:"歯",ex:"Brush your teeth."},
+    {w:"the",m:"その",ex:"Look at the moon."},
+    {w:"florist",m:"花屋",ex:"She is a florist."},
+    {w:"lemon",m:"レモン",ex:"Lemon is sour."},
+    {w:"panda",m:"パンダ",ex:"Pandas eat bamboo."},
+    {w:"sausage",m:"ソーセージ",ex:"I eat sausage."},
+    {w:"sweater",m:"セーター",ex:"I wear a sweater."},
+  ],
+  "10-2": [
+    {w:"town",m:"街",ex:"I live in town."},
+    {w:"whale",m:"くじら",ex:"Whales are huge."},
+    {w:"yogurt",m:"ヨーグルト",ex:"I eat yogurt."},
+    {w:"all",m:"全部の",ex:"I eat all of it."},
+    {w:"any",m:"どの",ex:"Do you have any?"},
+    {w:"begin",m:"〜を始める",ex:"Let's begin!"},
+    {w:"club",m:"部",ex:"I join a club."},
+    {w:"coat",m:"コート",ex:"I wear a coat."},
+    {w:"corner",m:"角",ex:"Turn at the corner."},
+    {w:"driver",m:"運転手",ex:"He is a driver."},
+    {w:"every",m:"すべての",ex:"I run every day."},
+    {w:"exam",m:"試験",ex:"I pass the exam."},
+    {w:"floor",m:"床",ex:"Sit on the floor."},
+    {w:"kilogram",m:"キログラム",ex:"It is 5 kilograms."},
+    {w:"next",m:"次の",ex:"Who is next?"},
+    {w:"uniform",m:"制服",ex:"I wear a uniform."},
+    {w:"bad",m:"悪い",ex:"This is bad."},
+    {w:"triangle",m:"三角形",ex:"A triangle has 3 sides."},
+    {w:"vegetable",m:"野菜",ex:"Eat your vegetables."},
+  ],
+  "10-3": [
+    {w:"off",m:"〜がはなれて",ex:"Turn off the light."},
+    {w:"over",m:"〜をこえて",ex:"Jump over it."},
+    {w:"page",m:"ページ",ex:"Open to page 10."},
+    {w:"send",m:"〜を送る",ex:"Send a letter."},
+    {w:"shoes",m:"くつ",ex:"I wear shoes."},
+    {w:"some",m:"いくつかの",ex:"I eat some apples."},
+    {w:"team",m:"チーム",ex:"I am on the team."},
+    {w:"sit",m:"座る",ex:"Please sit down."},
+    {w:"toast",m:"トースト",ex:"I eat toast."},
+    {w:"too",m:"〜もまた",ex:"Me too!"},
+    {w:"towel",m:"タオル",ex:"Use a towel."},
+    {w:"understand",m:"わかる",ex:"I understand."},
+    {w:"yen",m:"円",ex:"100 yen."},
+    {w:"best",m:"最も良い",ex:"This is the best."},
+    {w:"chopsticks",m:"はし",ex:"I use chopsticks."},
+    {w:"out",m:"外に",ex:"Go out."},
+    {w:"shower",m:"シャワー",ex:"Take a shower."},
+    {w:"body",m:"体",ex:"My body is healthy."},
+    {w:"child",m:"子ども",ex:"The child is cute."},
+    {w:"bitter",m:"にがい",ex:"Coffee is bitter."},
+  ],
+  "11-1": [
+    {w:"comedian",m:"コメディアン",ex:"He is a comedian."},
+    {w:"donut",m:"ドーナツ",ex:"I eat a donut."},
+    {w:"entrance",m:"入口",ex:"Use the entrance."},
+    {w:"sport",m:"スポーツ",ex:"I love sports."},
+    {w:"funny",m:"おもしろい",ex:"That is funny!"},
+    {w:"Germany",m:"ドイツ",ex:"Germany is in Europe."},
+    {w:"only",m:"ただひとつの",ex:"I have only one."},
+    {w:"join",m:"参加する",ex:"Please join us."},
+    {w:"lion",m:"ライオン",ex:"Lions are strong."},
+    {w:"P.M.",m:"午後",ex:"We meet at 3 P.M."},
+    {w:"popular",m:"人気のある",ex:"She is popular."},
+    {w:"shrine",m:"神社",ex:"I visit a shrine."},
+    {w:"sick",m:"病気の",ex:"I am sick today."},
+    {w:"Singapore",m:"シンガポール",ex:"Singapore is hot."},
+    {w:"smartphone",m:"スマートフォン",ex:"I use a smartphone."},
+    {w:"famous",m:"有名な",ex:"She is famous."},
+    {w:"Russia",m:"ロシア",ex:"Russia is large."},
+    {w:"snake",m:"ヘビ",ex:"The snake is long."},
+    {w:"exciting",m:"わくわくさせる",ex:"It is exciting!"},
+    {w:"popcorn",m:"ポップコーン",ex:"I eat popcorn."},
+  ],
+  "11-2": [
+    {w:"Spain",m:"スペイン",ex:"Spain is in Europe."},
+    {w:"special",m:"特別の",ex:"Today is special."},
+    {w:"steak",m:"ステーキ",ex:"I eat steak."},
+    {w:"straight",m:"まっすぐに",ex:"Go straight."},
+    {w:"Thailand",m:"タイ",ex:"Thailand is warm."},
+    {w:"try",m:"試す",ex:"Try this food."},
+    {w:"visit",m:"訪問する",ex:"I visit my friend."},
+    {w:"wear",m:"〜を着ている",ex:"I wear a hat."},
+    {w:"album",m:"アルバム",ex:"I have a photo album."},
+    {w:"answer",m:"答える",ex:"Please answer."},
+    {w:"brush",m:"ブラシ",ex:"Use a brush."},
+    {w:"building",m:"ビル",ex:"The building is tall."},
+    {w:"call",m:"〜に電話をかける",ex:"Call me later."},
+    {w:"drive",m:"運転する",ex:"He drives a car."},
+    {w:"early",m:"早い",ex:"Wake up early."},
+    {w:"toe",m:"つま先",ex:"I hurt my toe."},
+    {w:"turn",m:"曲がる",ex:"Turn left here."},
+    {w:"also",m:"〜もまた",ex:"I also like cats."},
+    {w:"watermelon",m:"すいか",ex:"Watermelon is sweet."},
+    {w:"dollar",m:"ドル",ex:"It costs 5 dollars."},
+  ],
+  "11-3": [
+    {w:"garbage",m:"生ごみ",ex:"Take out the garbage."},
+    {w:"goodbye",m:"さようなら",ex:"Goodbye!"},
+    {w:"ground",m:"地面",ex:"Sit on the ground."},
+    {w:"hobby",m:"趣味",ex:"My hobby is reading."},
+    {w:"just",m:"ちょうど",ex:"I just finished."},
+    {w:"leave",m:"去る",ex:"I leave at 8."},
+    {w:"meter",m:"メートル",ex:"It is 2 meters."},
+    {w:"phone",m:"電話",ex:"Call me on the phone."},
+    {w:"place",m:"場所",ex:"This is a nice place."},
+    {w:"pool",m:"プール",ex:"I swim in the pool."},
+    {w:"rock",m:"岩",ex:"I climb the rock."},
+    {w:"rose",m:"バラ",ex:"A rose is beautiful."},
+    {w:"rugby",m:"ラグビー",ex:"I play rugby."},
+    {w:"say",m:"言う",ex:"Say hello!"},
+    {w:"skate",m:"スケート靴",ex:"I skate on ice."},
+    {w:"nature",m:"自然",ex:"I love nature."},
+    {w:"plant",m:"植物",ex:"Water the plant."},
+    {w:"radio",m:"ラジオ",ex:"Listen to the radio."},
+    {w:"future",m:"未来",ex:"Think about the future."},
+    {w:"life",m:"生活",ex:"Life is beautiful."},
+  ],
+  "12-1": [
+    {w:"store",m:"店",ex:"Go to the store."},
+    {w:"tower",m:"塔",ex:"The tower is tall."},
+    {w:"waiter",m:"ウェーター",ex:"The waiter is kind."},
+    {w:"active",m:"活発な",ex:"She is active."},
+    {w:"baker",m:"パン屋",ex:"He is a baker."},
+    {w:"bat",m:"バット",ex:"I hit with a bat."},
+    {w:"cabbage",m:"キャベツ",ex:"I eat cabbage."},
+    {w:"calligraphy",m:"習字",ex:"I practice calligraphy."},
+    {w:"camping",m:"キャンプ",ex:"I enjoy camping."},
+    {w:"circle",m:"円",ex:"Draw a circle."},
+    {w:"cow",m:"めうし",ex:"The cow gives milk."},
+    {w:"diamond",m:"ひし形",ex:"A diamond sparkles."},
+    {w:"dolphin",m:"いるか",ex:"Dolphins are smart."},
+    {w:"drum",m:"太鼓",ex:"He plays the drum."},
+    {w:"giraffe",m:"きりん",ex:"Giraffes are tall."},
+    {w:"brave",m:"勇敢な",ex:"He is brave."},
+    {w:"castle",m:"城",ex:"The castle is old."},
+    {w:"Chinese",m:"中国人",ex:"She is Chinese."},
+    {w:"arm",m:"腕",ex:"I hurt my arm."},
+    {w:"dragonfly",m:"とんぼ",ex:"A dragonfly flies."},
+  ],
+  "12-2": [
+    {w:"hiking",m:"ハイキング",ex:"I go hiking."},
+    {w:"lettuce",m:"レタス",ex:"I eat lettuce."},
+    {w:"moon",m:"月",ex:"The moon is bright."},
+    {w:"omelet",m:"オムレツ",ex:"I eat an omelet."},
+    {w:"parfait",m:"パフェ",ex:"I eat a parfait."},
+    {w:"pineapple",m:"パイナップル",ex:"I like pineapple."},
+    {w:"pudding",m:"プリン",ex:"I eat pudding."},
+    {w:"socks",m:"くつ下",ex:"I wear socks."},
+    {w:"square",m:"四角形",ex:"Draw a square."},
+    {w:"stapler",m:"ホッチキス",ex:"Use a stapler."},
+    {w:"temple",m:"寺",ex:"I visit the temple."},
+    {w:"travel",m:"旅行する",ex:"I love to travel."},
+    {w:"unicycle",m:"一輪車",ex:"Ride a unicycle."},
+    {w:"because",m:"〜なので",ex:"I stay because it rains."},
+    {w:"become",m:"〜になる",ex:"I want to become a doctor."},
+    {w:"gorilla",m:"ゴリラ",ex:"Gorillas are big."},
+    {w:"vet",m:"獣医",ex:"She is a vet."},
+    {w:"left",m:"左",ex:"Turn to the left."},
+    {w:"recorder",m:"リコーダー",ex:"I play the recorder."},
+  ],
+  "12-3": [
+    {w:"block",m:"ブロック",ex:"Build with blocks."},
+    {w:"cafeteria",m:"カフェテリア",ex:"Eat in the cafeteria."},
+    {w:"centimeter",m:"センチメートル",ex:"It is 10 centimeters."},
+    {w:"dancer",m:"ダンサー",ex:"She is a dancer."},
+    {w:"exit",m:"出口",ex:"Use the exit."},
+    {w:"finish",m:"〜を終える",ex:"I finish my homework."},
+    {w:"firefighter",m:"消防士",ex:"He is a firefighter."},
+    {w:"forget",m:"〜を忘れる",ex:"Don't forget!"},
+    {w:"fork",m:"フォーク",ex:"Use a fork."},
+    {w:"hello",m:"こんにちは",ex:"Hello, everyone!"},
+    {w:"hi",m:"やあ",ex:"Hi there!"},
+    {w:"inside",m:"〜の中に・内側に",ex:"Go inside."},
+    {w:"money",m:"お金",ex:"I have money."},
+    {w:"Mrs.",m:"既婚女性の敬称",ex:"Mrs. Smith is kind."},
+    {w:"o'clock",m:"〜時",ex:"It is 3 o'clock."},
+    {w:"college",m:"大学",ex:"I go to college."},
+    {w:"firework",m:"花火",ex:"I watch fireworks."},
+    {w:"near",m:"〜の近くに",ex:"The park is near."},
+    {w:"curry",m:"カレー",ex:"I love curry."},
+    {w:"expensive",m:"高価な",ex:"That is expensive."},
+  ],
+};
+
+const STAGE_KEYS = Object.keys(STAGES_DATA).sort((a,b)=>{
+  const [am,an]=a.split('-').map(Number);
+  const [bm,bn]=b.split('-').map(Number);
+  return am!==bm?am-bm:an-bn;
+});
+// Build flat word list with stage info
+const ALL_WORDS = [];
+STAGE_KEYS.forEach(st=>{
+  STAGES_DATA[st].forEach(w=>{
+    ALL_WORDS.push({...w, stage:st});
+  });
+});
+
+document.getElementById('total-lbl').textContent = `全${ALL_WORDS.length}語・${STAGE_KEYS.length}ステージ収録`;
+
+// ============================================================
+// PROFILE SYSTEM
+// ============================================================
+const AVATARS = ['🐱','🐶','🐰','🐻','🐼','🦊','🐸','🐯','🦁','🐨','🐧','🐦','🦋','🌟','🌈','🍎','🍓','🎮'];
+let profiles = {}; // {id: {name, avatar, mastery}}
+let currentProfileId = null;
+let mastery = {};
+
+function mKey(w){ return w.w+'|'+w.stage; }
+
+function defaultMastery(){
+  const m={};
+  ALL_WORDS.forEach(w=>{ m[mKey(w)]={status:'none',correct:0,wrong:0}; });
+  return m;
+}
+function saveAll(){
+  if(currentProfileId) profiles[currentProfileId].mastery = {...mastery};
+  try{localStorage.setItem('eiken5_profiles', JSON.stringify(profiles));
+      localStorage.setItem('eiken5_current', currentProfileId);}catch(e){}
+}
+function loadAll(){
+  try{
+    const pd=localStorage.getItem('eiken5_profiles');
+    if(pd) profiles=JSON.parse(pd);
+    const cur=localStorage.getItem('eiken5_current');
+    if(cur && profiles[cur]) currentProfileId=cur;
+  }catch(e){}
+}
+function saveM(){ saveAll(); }
+
+function switchProfile(id){
+  if(currentProfileId) profiles[currentProfileId].mastery = {...mastery};
+  currentProfileId = id;
+  mastery = {...defaultMastery(), ...(profiles[id].mastery||{})};
+  updateUserBadge();
+  saveAll();
+  // refresh UI
+  initFlash(); renderMastery(); renderWList();
+  closeProfile();
+}
+function updateUserBadge(){
+  if(!currentProfileId){ 
+    document.getElementById('ub-name').textContent='生徒を選ぶ';
+    document.getElementById('ub-avatar').textContent='👤';
+    return;
+  }
+  const p=profiles[currentProfileId];
+  document.getElementById('ub-name').textContent=p.name;
+  document.getElementById('ub-avatar').textContent=p.avatar;
+}
+function addProfile(){
+  const inp=document.getElementById('new-name-input');
+  const name=inp.value.trim();
+  if(!name) return;
+  const id='p_'+Date.now();
+  const avatar=AVATARS[Object.keys(profiles).length % AVATARS.length];
+  profiles[id]={name, avatar, mastery:defaultMastery()};
+  saveAll();
+  inp.value='';
+  renderProfileList();
+  switchProfile(id);
+}
+function deleteProfile(id){
+  if(!confirm(`「${profiles[id].name}」を削除しますか？`)) return;
+  delete profiles[id];
+  if(currentProfileId===id){
+    currentProfileId=null; mastery=defaultMastery(); updateUserBadge();
+  }
+  saveAll(); renderProfileList();
+}
+function openProfile(){ renderProfileList(); document.getElementById('profile-overlay').style.display='flex'; }
+function closeProfile(){ document.getElementById('profile-overlay').style.display='none'; }
+
+function getProfileStats(p){
+  const m=p.mastery||{};
+  const master=Object.values(m).filter(v=>v.status==='master').length;
+  const ok=Object.values(m).filter(v=>v.status==='ok').length;
+  const learn=Object.values(m).filter(v=>v.status==='learn').length;
+  return {master,ok,learn};
+}
+function renderProfileList(){
+  const div=document.getElementById('profile-list');
+  div.innerHTML='';
+  const ids=Object.keys(profiles);
+  if(!ids.length){
+    div.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:20px">まだ生徒が登録されていません</div>';
+    return;
+  }
+  ids.forEach(id=>{
+    const p=profiles[id];
+    const s=getProfileStats(p);
+    const isActive=id===currentProfileId;
+    const row=document.createElement('div');
+    row.className='profile-item'+(isActive?' active-p':'');
+    row.innerHTML=`
+      <div class="pi-avatar" style="background:${isActive?'#eef2ff':'#f0f4ff'}">${p.avatar}</div>
+      <div class="pi-info">
+        <div class="pi-name">${p.name}${isActive?' <span style="font-size:10px;background:#4f6ef7;color:#fff;padding:1px 6px;border-radius:10px">現在</span>':''}</div>
+        <div class="pi-stats">⭐${s.master} ✅${s.ok} 📖${s.learn} / 全${ALL_WORDS.length}語</div>
+      </div>
+      <div class="pi-actions">
+        ${!isActive?`<button class="pi-sel" onclick="switchProfile('${id}')">選択</button>`:''}
+        <button class="pi-del" onclick="deleteProfile('${id}')">削除</button>
+      </div>`;
+    div.appendChild(row);
+  });
+}
+
+// close overlay on background click
+document.getElementById('profile-overlay').addEventListener('click',function(e){
+  if(e.target===this)closeProfile();
+});
+
+// Load on startup
+loadAll();
+if(currentProfileId && profiles[currentProfileId]){
+  mastery={...defaultMastery(),...(profiles[currentProfileId].mastery||{})};
+  updateUserBadge();
+} else {
+  mastery=defaultMastery();
+}
+
+const synth = window.speechSynthesis;
+function spk(txt,btn,rate){
+  if(!synth)return; synth.cancel();
+  const u=new SpeechSynthesisUtterance(txt); u.lang='en-US'; u.rate=rate||0.85;
+  if(btn){btn.classList.add('playing');}
+  u.onend=()=>{if(btn)btn.classList.remove('playing');};
+  synth.speak(u);
+}
+function spkEl(id,bid,rate){
+  const t=document.getElementById(id)?.textContent;
+  const b=document.getElementById(bid);
+  if(t)spk(t,b,rate);
+}
+function shuf(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function getStageWords(st){ return st==='ALL'?ALL_WORDS:STAGES_DATA[st].map(w=>({...w,stage:st})); }
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ============================================================
+// 自動ふりがな辞書（意味欄に登場する漢字語を網羅）
+// ============================================================
+const KANA_MAP = [
+  // 長い語から先にマッチさせる（部分一致防止）
+  ["自転車","じてんしゃ"],["動物","どうぶつ"],["料理","りょうり"],["音楽","おんがく"],
+  ["家族","かぞく"],["学校","がっこう"],["勉強","べんきょう"],["先生","せんせい"],
+  ["友達","ともだち"],["図書館","としょかん"],["乗り物","のりもの"],["食べ物","たべもの"],
+  ["野菜","やさい"],["果物","くだもの"],["飲み物","のみもの"],["買い物","かいもの"],
+  ["動詞","どうし"],["形容詞","けいようし"],["序数","じょすう"],["代名詞","だいめいし"],
+  ["算数","さんすう"],["数学","すうがく"],["理科","りか"],["体育","たいいく"],
+  ["美術","びじゅつ"],["芸術","げいじゅつ"],["歴史","れきし"],["科学","かがく"],
+  ["教科書","きょうかしょ"],["教科","きょうか"],["授業","じゅぎょう"],["教室","きょうしつ"],
+  ["体育館","たいいくかん"],["黒板","こくばん"],["消しゴム","けしごむ"],
+  ["鉛筆","えんぴつ"],["辞書","じしょ"],["定規","じょうぎ"],["筆箱","ふでばこ"],
+  ["宿題","しゅくだい"],["試験","しけん"],["博物館","はくぶつかん"],["美術館","びじゅつかん"],
+  ["図書室","としょしつ"],["公園","こうえん"],["病院","びょういん"],["空港","くうこう"],
+  ["警察署","けいさつしょ"],["郵便局","ゆうびんきょく"],["ガソリンスタンド","ガソリンスタンド"],
+  ["デパート","デパート"],["スーパーマーケット","スーパーマーケット"],
+  ["本屋","ほんや"],["花屋","はなや"],["電車","でんしゃ"],["飛行機","ひこうき"],
+  ["自転車","じてんしゃ"],["新聞","しんぶん"],["新聞紙","しんぶんし"],
+  ["朝食","ちょうしょく"],["昼食","ちゅうしょく"],["夕食","ゆうしょく"],
+  ["台所","だいどころ"],["台所・キッチン","だいどころ・キッチン"],
+  ["浴室","よくしつ"],["寝室","しんしつ"],["居間","いま"],["庭","にわ"],
+  ["床","ゆか"],["壁","かべ"],["窓","まど"],["階段","かいだん"],
+  ["祖父","そふ"],["祖母","そぼ"],["父","ちち"],["母","はは"],
+  ["兄","あに"],["姉","あね"],["弟","おとうと"],["妹","いもうと"],
+  ["息子","むすこ"],["娘","むすめ"],["叔父","おじ"],["叔母","おば"],
+  ["おじさん","おじさん"],["おばさん","おばさん"],
+  ["男の子","おとこのこ"],["女の子","おんなのこ"],
+  ["男の人","おとこのひと"],["女の人","おんなのひと"],
+  ["子どもたち","こどもたち"],["子ども","こども"],
+  ["医者","いしゃ"],["看護師","かんごし"],["歯医者","はいしゃ"],
+  ["消防士","しょうぼうし"],["操縦者","そうじゅうしゃ"],["農家","のうか"],
+  ["運転手","うんてんしゅ"],["科学者","かがくしゃ"],["芸術家","げいじゅつか"],
+  ["音楽家","おんがくか"],["ピアニスト","ピアニスト"],["歌手","かしゅ"],
+  ["俳優","はいゆう"],["選手","せんしゅ"],["ウェーター","ウェーター"],
+  ["花火","はなび"],["祭り","まつり"],["神社","じんじゃ"],
+  ["大きい","おおきい"],["小さい","ちいさい"],["高い","たかい"],["低い","ひくい"],
+  ["長い","ながい"],["短い","みじかい"],["重い","おもい"],["軽い","かるい"],
+  ["速い","はやい"],["遅い","おそい"],["強い","つよい"],["弱い","よわい"],
+  ["新しい","あたらしい"],["古い","ふるい"],["若い","わかい"],["暖かい","あたたかい"],
+  ["難しい","むずかしい"],["簡単","かんたん"],["楽しい","たのしい"],["悲しい","かなしい"],
+  ["嬉しい","うれしい"],["怒っている","おこっている"],["疲れた","つかれた"],
+  ["眠い","ねむい"],["忙しい","いそがしい"],["静かな","しずかな"],["勇敢な","ゆうかんな"],
+  ["親切な","しんせつな"],["有名な","ゆうめいな"],["人気のある","にんきのある"],
+  ["特別の","とくべつの"],["活発な","かっぱつな"],["便利な","べんりな"],["高価な","こうかな"],
+  ["晴れた","はれた"],["曇りの","くもりの"],["雪が降る","ゆきがふる"],
+  ["暑い","あつい"],["寒い","さむい"],["冷たい","つめたい"],["熱い","あつい"],
+  ["行く","いく"],["来る","くる"],["帰る","かえる"],["起きる","おきる"],["寝る","ねる"],
+  ["食べる","たべる"],["飲む","のむ"],["作る","つくる"],["書く","かく"],["読む","よむ"],
+  ["見る","みる"],["聞く","きく"],["話す","はなす"],["歌う","うたう"],["歩く","あるく"],
+  ["走る","はしる"],["泳ぐ","およぐ"],["遊ぶ","あそぶ"],["勉強する","べんきょうする"],
+  ["練習する","れんしゅうする"],["掃除する","そうじする"],["料理する","りょうりする"],
+  ["使う","つかう"],["買う","かう"],["売る","うる"],["教える","おしえる"],["学ぶ","まなぶ"],
+  ["助ける","たすける"],["見つける","みつける"],["運ぶ","はこぶ"],["切る","きる"],
+  ["置く","おく"],["取る","とる"],["持っている","もっている"],["始まる","はじまる"],
+  ["終わる","おわる"],["止まる","とまる"],["乗る","のる"],["降りる","おりる"],
+  ["入る","はいる"],["出る","でる"],["上がる","あがる"],["下がる","さがる"],
+  ["起こる","おこる"],["続ける","つづける"],["試す","ためす"],["訪問する","ほうもんする"],
+  ["旅行する","りょこうする"],["参加する","さんかする"],["去る","さる"],["着る","きる"],
+  ["与える","あたえる"],["感謝する","かんしゃする"],["滞在する","たいざいする"],
+  ["曲がる","まがる"],["運転する","うんてんする"],["描く","えがく"],["踊る","おどる"],
+  ["飛ぶ","とぶ"],["泳いだ","およいだ"],
+  ["月","つき"],["星","ほし"],["空","そら"],["海","うみ"],["川","かわ"],["山","やま"],
+  ["池","いけ"],["森","もり"],["花","はな"],["木","き"],["葉","は"],["草","くさ"],
+  ["雪","ゆき"],["雨","あめ"],["雲","くも"],["太陽","たいよう"],["光","ひかり"],
+  ["地面","じめん"],["岩","いわ"],["自然","しぜん"],["植物","しょくぶつ"],["虹","にじ"],
+  ["犬","いぬ"],["猫","ねこ"],["鳥","とり"],["魚","さかな"],["馬","うま"],["牛","うし"],
+  ["豚","ぶた"],["羊","ひつじ"],["虎","とら"],["狼","おおかみ"],["熊","くま"],
+  ["猿","さる"],["象","ぞう"],["きりん","きりん"],["イルカ","イルカ"],
+  ["ゴリラ","ゴリラ"],["ゴリラ","ゴリラ"],["蝶","ちょう"],["とんぼ","とんぼ"],
+  ["うさぎ","うさぎ"],["ハムスター","ハムスター"],
+  ["頭","あたま"],["顔","かお"],["目","め"],["耳","みみ"],["鼻","はな"],["口","くち"],
+  ["歯","は"],["髪","かみ"],["肩","かた"],["腕","うで"],["手","て"],["指","ゆび"],
+  ["足","あし"],["膝","ひざ"],["体","からだ"],
+  ["赤","あか"],["青","あお"],["白","しろ"],["黒","くろ"],["緑","みどり"],["黄色","きいろ"],
+  ["茶色","ちゃいろ"],["紫","むらさき"],["色","いろ"],
+  ["春","はる"],["夏","なつ"],["秋","あき"],["冬","ふゆ"],["季節","きせつ"],
+  ["朝","あさ"],["昼","ひる"],["夜","よる"],["夕方","ゆうがた"],["今日","きょう"],
+  ["明日","あした"],["週末","しゅうまつ"],["誕生日","たんじょうび"],
+  ["週","しゅう"],["年","とし"],["時間","じかん"],["分","ふん"],
+  ["日曜日","にちようび"],["月曜日","げつようび"],["火曜日","かようび"],
+  ["水曜日","すいようび"],["木曜日","もくようび"],["金曜日","きんようび"],["土曜日","どようび"],
+  ["正午","しょうご"],["午前","ごぜん"],["午後","ごご"],["毎日","まいにち"],
+  ["毎晩","まいばん"],["今","いま"],["早くに","はやくに"],
+  ["一日","いちにち"],["今日は","きょうは"],
+  ["日本","にほん"],["日本語","にほんご"],["日本人","にほんじん"],
+  ["中国","ちゅうごく"],["中国語","ちゅうごくご"],["中国人","ちゅうごくじん"],
+  ["韓国","かんこく"],["フランス語","フランスご"],["イタリア語","イタリアご"],
+  ["英語","えいご"],["英語の","えいごの"],
+  ["一","いち"],["二","に"],["三","さん"],["四","よん"],["五","ご"],
+  ["六","ろく"],["七","なな"],["八","はち"],["九","きゅう"],["十","じゅう"],
+  ["百","ひゃく"],["千","せん"],["円","えん"],
+  ["1番目の","いちばんめの"],["2番目の","にばんめの"],["3番目の","さんばんめの"],
+  ["番号","ばんごう"],["数字","すうじ"],
+  ["場所","ばしょ"],["道","みち"],["橋","はし"],["建物","たてもの"],["塔","とう"],
+  ["城","しろ"],["寺","てら"],["入口","いりぐち"],["出口","でぐち"],
+  ["部屋","へや"],["家","いえ"],["庭","にわ"],["ベッド","ベッド"],
+  ["机","つくえ"],["椅子","いす"],["テーブル","テーブル"],
+  ["時計","とけい"],["カレンダー","カレンダー"],["電話","でんわ"],
+  ["ラジオ","ラジオ"],["テレビ","テレビ"],
+  ["服","ふく"],["帽子","ぼうし"],["手袋","てぶくろ"],["靴","くつ"],["靴下","くつした"],
+  ["傘","かさ"],["鞄","かばん"],["ポケット","ポケット"],
+  ["写真","しゃしん"],["絵","え"],["絵・写真","え・しゃしん"],
+  ["手紙","てがみ"],["葉書","はがき"],["日記","にっき"],
+  ["切符","きっぷ"],["チケット","チケット"],["お金","おかね"],["硬貨","こうか"],
+  ["人","ひと"],["人々","ひとびと"],["みんな","みんな"],
+  ["質問","しつもん"],["答え","こたえ"],["答える","こたえる"],
+  ["物語","ものがたり"],["名前","なまえ"],["考え","かんがえ"],
+  ["未来","みらい"],["生活","せいかつ"],["夢","ゆめ"],["趣味","しゅみ"],
+  ["世界","せかい"],["国","くに"],["都市","とし"],["街","まち"],
+  ["大学","だいがく"],["大きな","おおきな"],["小さな","ちいさな"],
+  ["私は","わたしは"],["私の","わたしの"],["私を","わたしを"],["私を・私に","わたしを・わたしに"],
+  ["私たちは","わたしたちは"],["私たちの","わたしたちの"],["私たちを","わたしたちを"],
+  ["私のもの","わたしのもの"],
+  ["彼は","かれは"],["彼の","かれの"],["彼を・彼に","かれを・かれに"],
+  ["彼女は","かのじょは"],["彼女の・彼女を","かのじょの・かのじょを"],["彼女のもの","かのじょのもの"],
+  ["彼らは","かれらは"],["彼らの","かれらの"],["彼らを・彼らに","かれらを・かれらに"],
+  ["彼らのもの","かれらのもの"],
+  ["それの","それの"],["あなたのもの","あなたのもの"],["あなたの","あなたの"],
+  ["水族館","すいぞくかん"],["動物園","どうぶつえん"],
+  ["ハイキング","ハイキング"],["キャンプ","キャンプ"],
+  ["上に","うえに"],["下に","したに"],["右","みぎ"],["左","ひだり"],["外に","そとに"],
+  ["中に","なかに"],["前に","まえに"],["後ろに","うしろに"],["隣の","となりの"],
+  ["近くに","ちかくに"],["遠い","とおい"],["〜の周り","〜のまわり"],
+  ["〜の下に","〜のしたに"],["〜の中に・内側に","〜のなかに・うちがわに"],
+  ["全部の","ぜんぶの"],["全て","すべて"],["〜もまた","〜もまた"],
+  ["毎晩","まいばん"],["しばしば","しばしば"],["普段","ふだん"],["時々","ときどき"],
+  ["本当に","ほんとうに"],["ちょうど","ちょうど"],["とても","とても"],
+  ["放課後","ほうかご"],
+];
+
+// テキストにふりがな rubyタグを自動挿入
+function rubyHtml(w){
+  let text = w.m;
+  // 長い語順でソート済みのKANA_MAPを適用
+  let result = escHtml(text);
+  // 一度エスケープしてからrubyタグを挿入するのではなく、
+  // プレーンテキストに対してruby置換してからエスケープ
+  // 分割方式：テキストをトークンに分解してrubyを挿入
+  let parts = [text];
+  for(const [kanji, yomi] of KANA_MAP){
+    if(!kanji || kanji === yomi) continue; // ひらがな/カタカナのみはスキップ
+    // 漢字が含まれる場合のみ処理
+    if(!/[\u4e00-\u9fff\u3400-\u4dbf]/.test(kanji)) continue;
+    const newParts = [];
+    for(const part of parts){
+      if(typeof part !== 'string'){newParts.push(part);continue;}
+      const idx = part.indexOf(kanji);
+      if(idx === -1){newParts.push(part);continue;}
+      if(idx > 0) newParts.push(part.slice(0,idx));
+      newParts.push({kanji, yomi});
+      const rest = part.slice(idx+kanji.length);
+      if(rest) newParts.push(rest);
+    }
+    parts = newParts;
+  }
+  return parts.map(p=>
+    typeof p === 'string'
+      ? escHtml(p)
+      : `<ruby>${escHtml(p.kanji)}<rt>${escHtml(p.yomi)}</rt></ruby>`
+  ).join('');
+}
+
+// -------- TAB --------
+function showTab(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('visible');
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='mastery')renderMastery();
+  if(id==='listen'){renderWList();renderStageBtns('lp-stages',lpStage,c=>{lpStage=c;lpIdx=0;updateLP();renderWList();renderStageBtns('lp-stages',lpStage,arguments.callee);});}
+}
+
+// -------- STAGE BUTTONS --------
+function renderStageBtns(containerId, current, onSelect){
+  const div=document.getElementById(containerId);
+  div.innerHTML='';
+  ['ALL',...STAGE_KEYS].forEach(st=>{
+    const b=document.createElement('button');
+    b.className='sg-btn'+(st===current?' on':'');
+    b.textContent=st==='ALL'?'🌐 全部':'ST '+st;
+    b.onclick=()=>onSelect(st);
+    div.appendChild(b);
+  });
+}
+
+// ============ FLASHCARD ============
+let fcStage='ALL', fcOrd=[], fcIdx=0, fcOkCnt=0;
+function initFlash(){
+  const ws=getStageWords(fcStage);
+  fcOrd=shuf([...Array(ws.length).keys()]); fcIdx=0; fcOkCnt=0;
+  updateFC(ws);
+}
+function updateFC(ws){
+  ws=ws||getStageWords(fcStage);
+  if(!ws.length)return;
+  document.getElementById('fc').classList.remove('flipped');
+  const w=ws[fcOrd[fcIdx]];
+  document.getElementById('fc-stag').textContent='STAGE '+w.stage;
+  document.getElementById('fc-word').textContent=w.w;
+  document.getElementById('fc-m').innerHTML=rubyHtml(w);
+  document.getElementById('fc-ex').textContent=w.ex||'';
+  document.getElementById('fc-left').textContent=ws.length-fcOkCnt;
+  document.getElementById('fc-ok').textContent=fcOkCnt;
+  document.getElementById('fc-total').textContent=ws.length;
+  const pct=Math.round(fcOkCnt/ws.length*100);
+  document.getElementById('fc-prog').style.width=pct+'%';
+  document.getElementById('fc-pl').textContent=fcOkCnt+' / '+ws.length;
+  document.getElementById('fc-pr').textContent=pct+'%';
+  ['fc-spk','fc-spk2'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('playing');});
+}
+function flip(){document.getElementById('fc').classList.toggle('flipped');}
+function skipCard(){
+  const ws=getStageWords(fcStage);
+  const w=ws[fcOrd[fcIdx]]; const k=mKey(w);
+  if(mastery[k].status==='none')mastery[k].status='learn';
+  mastery[k].wrong++; saveM();
+  fcOrd.push(fcOrd.splice(fcIdx,1)[0]); updateFC(ws);
+}
+function gotCard(){
+  const ws=getStageWords(fcStage);
+  const w=ws[fcOrd[fcIdx]]; const k=mKey(w);
+  mastery[k].correct++;
+  if(mastery[k].correct>=3)mastery[k].status='master';
+  else mastery[k].status='ok';
+  saveM(); fcOkCnt++;
+  fcOrd.splice(fcIdx,1);
+  if(!fcOrd.length){fcOrd=shuf([...Array(ws.length).keys()]);fcOkCnt=0;}
+  else if(fcIdx>=fcOrd.length)fcIdx=0;
+  updateFC(ws);
+}
+function renderFcStages(){
+  renderStageBtns('fc-stages',fcStage,st=>{fcStage=st;initFlash();renderFcStages();});
+}
+
+// ============ QUIZ ============
+let qMode='stage', qStage='ALL', qCnt=15, qProgFlt='none';
+let qQs=[], qIdx=0, qCorr=0, qAns=false, qWrong=[];
+
+function setQMode(m){
+  qMode=m;
+  ['stage','all','prog'].forEach(x=>document.getElementById('qm-'+x).classList.toggle('active',m===x));
+  document.getElementById('q-stage-select').style.display=m==='stage'?'':'none';
+  document.getElementById('q-prog-select').style.display=m==='prog'?'':'none';
+  updateQInfo();
+}
+function setQProgFlt(f,el){
+  qProgFlt=f;
+  document.querySelectorAll('#q-prog-filters .flt').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  updateQInfo();
+}
+function setQCnt(n){
+  qCnt=n;
+  document.querySelectorAll('.cnt-btn').forEach(b=>b.classList.toggle('active',b.textContent===n+'問'));
+  updateQInfo();
+}
+function getQPool(){
+  if(qMode==='all') return ALL_WORDS;
+  if(qMode==='stage') return getStageWords(qStage);
+  // prog mode
+  if(qProgFlt==='weak'){
+    return ALL_WORDS.filter(w=>{const ms=mastery[mKey(w)];return ms&&ms.wrong>0;});
+  }
+  return ALL_WORDS.filter(w=>{const ms=mastery[mKey(w)];return ms&&ms.status===qProgFlt;});
+}
+function progFltLabel(){
+  const map={none:'⚪ 未学習',learn:'🟡 学習中',ok:'🟢 できた',master:'🟣 マスター',weak:'❌ 間違えた'};
+  return map[qProgFlt]||qProgFlt;
+}
+function updateQInfo(){
+  const pool=getQPool();
+  const avail=Math.min(pool.length,qCnt);
+  let src='';
+  if(qMode==='all') src='🎲 全ステージ';
+  else if(qMode==='stage') src='📂 STAGE '+qStage;
+  else src='📊 '+progFltLabel();
+  if(pool.length===0){
+    document.getElementById('q-info').textContent=`${src} — 該当する単語がありません`;
+  } else {
+    document.getElementById('q-info').textContent=`${src}から${avail}問出題（対象:${pool.length}語）`;
+  }
+}
+function renderQStages(){
+  renderStageBtns('q-stages',qStage,st=>{qStage=st;renderQStages();updateQInfo();});
+}
+function backToSetup(){
+  document.getElementById('q-setup').style.display='';
+  document.getElementById('q-main').style.display='none';
+  document.getElementById('q-res').style.display='none';
+  renderQStages(); updateQInfo();
+}
+function startQuiz(){
+  const pool=getQPool();
+  if(!pool.length){alert('該当する単語がありません。\n進捗モードの場合は単語カードで学習してから試してください！');return;}
+  const take=Math.min(qCnt,pool.length);
+  qQs=shuf([...pool]).slice(0,take);
+  qIdx=0;qCorr=0;qWrong=[];
+  document.getElementById('q-setup').style.display='none';
+  document.getElementById('q-main').style.display='';
+  document.getElementById('q-res').style.display='none';
+  document.getElementById('q-c').textContent=0;
+  document.getElementById('q-tot').textContent=take;
+  let lbl='';
+  if(qMode==='all') lbl='🎲 全ステージ';
+  else if(qMode==='stage') lbl='📂 STAGE '+qStage;
+  else lbl='📊 '+progFltLabel();
+  document.getElementById('q-lbl').textContent=lbl;
+  showQ();
+}
+function showQ(){
+  qAns=false;
+  const q=qQs[qIdx]; const tot=qQs.length;
+  document.getElementById('q-word').textContent=q.w;
+  document.getElementById('q-prog').style.width=(qIdx/tot*100)+'%';
+  document.getElementById('q-n').textContent=qIdx+1;
+  document.getElementById('fb').style.display='none';
+  document.getElementById('q-nxt').style.display='none';
+  document.getElementById('q-spk').classList.remove('playing');
+  // choices: prefer same-stage distractors
+  const sameSt=ALL_WORDS.filter(x=>x.m!==q.m&&x.stage===q.stage);
+  const other=ALL_WORDS.filter(x=>x.m!==q.m&&x.stage!==q.stage);
+  const pool=sameSt.length>=3?sameSt:shuf([...sameSt,...other]);
+  const wrongs=shuf(pool).slice(0,3);
+  const opts=shuf([q,...wrongs]);
+  const div=document.getElementById('choices'); div.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button'); b.className='ch';
+    b.innerHTML=rubyHtml(o);
+    b.dataset.m=o.m;
+    b.onclick=()=>checkA(b,o.m,q.m,q);
+    div.appendChild(b);
+  });
+}
+function checkA(el,chosen,correct,q){
+  if(qAns)return; qAns=true;
+  document.querySelectorAll('.ch').forEach(c=>{
+    c.classList.add('locked');
+    if(c.dataset.m===correct)c.classList.add('show-c');
+  });
+  const k=mKey(q); const fb=document.getElementById('fb');
+  if(chosen===correct){
+    el.classList.add('correct'); qCorr++;
+    document.getElementById('q-c').textContent=qCorr;
+    mastery[k].correct++;
+    mastery[k].status=mastery[k].correct>=3?'master':'ok';
+    fb.className='fb ok'; fb.textContent='✓ 正解！ Great job! 🎉';
+  } else {
+    el.classList.add('wrong');
+    mastery[k].wrong++;
+    if(mastery[k].status==='none')mastery[k].status='learn';
+    qWrong.push({w:q.w,correct:correct,correctHtml:rubyHtml(q),stage:q.stage});
+    fb.className='fb ng'; fb.innerHTML='✗ ざんねん… せいかいは「'+rubyHtml(q)+'」でした！';
+  }
+  saveM(); fb.style.display='block';
+  document.getElementById('q-nxt').style.display='block';
+}
+function nextQ(){
+  qIdx++;
+  if(qIdx>=qQs.length)showQRes(); else showQ();
+}
+function showQRes(){
+  document.getElementById('q-main').style.display='none';
+  document.getElementById('q-res').style.display='block';
+  const tot=qQs.length; const p=qCorr/tot;
+  let e='🌟',t='完了！',s='';
+  if(p>=1){e='🏆';t='パーフェクト!';s=tot+'問全問正解！英検5級合格間違いなし！';}
+  else if(p>=.8){e='🎉';t='とっても上手!';s=qCorr+'/'+tot+'問正解！あと少しで完璧！';}
+  else if(p>=.6){e='😊';t='がんばった!';s=qCorr+'/'+tot+'問正解。もう一度挑戦しよう！';}
+  else{e='📚';t='練習しよう!';s=qCorr+'/'+tot+'問正解。単語カードで復習してみて！';}
+  document.getElementById('r-em').textContent=e;
+  document.getElementById('r-ti').textContent=t;
+  document.getElementById('r-su').textContent=s;
+  const wl=document.getElementById('q-wrong-list');
+  if(qWrong.length){
+    wl.innerHTML='<div style="font-size:12px;font-weight:600;color:#c53030;margin-bottom:7px">❌ まちがえた たんご ('+qWrong.length+'語)</div>';
+    qWrong.forEach(item=>{
+      wl.innerHTML+='<div class="wrong-item"><span class="wrong-w">'+escHtml(item.w)+'</span><span class="wrong-m">→ '+item.correctHtml+'</span><span style="margin-left:auto;font-size:10px;color:#aaa">ST'+item.stage+'</span></div>';
+    });
+  } else { wl.innerHTML=''; }
+}
+
+// ============ LISTEN ============
+let lpStage='ALL', lpIdx=0;
+function updateLP(){
+  const ws=getStageWords(lpStage);
+  if(!ws.length)return;
+  if(lpIdx>=ws.length)lpIdx=0;
+  const w=ws[lpIdx];
+  document.getElementById('lp-w').textContent=w.w;
+  document.getElementById('lp-m').innerHTML=rubyHtml(w);
+  document.getElementById('lp-ex').textContent=w.ex||'';
+  document.getElementById('lp-btn').classList.remove('playing');
+  const eb=document.getElementById('lp-exspk');
+  if(eb)eb.classList.remove('playing');
+  document.querySelectorAll('.wi').forEach((el,i)=>el.classList.toggle('active',i===lpIdx));
+}
+function lspk(){
+  const ws=getStageWords(lpStage);
+  const w=ws[lpIdx]; if(!w)return;
+  const btn=document.getElementById('lp-btn');
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(w.w);u.lang='en-US';u.rate=0.75;
+  btn.classList.add('playing');btn.textContent='⏸';
+  u.onend=()=>{btn.classList.remove('playing');btn.textContent='▶';};
+  synth.speak(u);
+}
+function lpPrev(){const ws=getStageWords(lpStage);if(lpIdx>0){lpIdx--;updateLP();}}
+function lpNext(){const ws=getStageWords(lpStage);if(lpIdx<ws.length-1){lpIdx++;updateLP();}}
+function renderWList(){
+  const div=document.getElementById('wlist'); div.innerHTML='';
+  const ws=getStageWords(lpStage);
+  ws.forEach((w,i)=>{
+    const b=document.createElement('div');
+    b.className='wi'+(i===lpIdx?' active':'');
+    const s=mastery[mKey(w)]?.status||'none';
+    const dot=s==='master'?'🟣':s==='ok'?'🟢':s==='learn'?'🟡':'⚪';
+    b.innerHTML='<div class="wi-w">'+escHtml(w.w)+' <span style="float:right">'+dot+'</span></div><div class="wi-m">'+rubyHtml(w)+'</div>';
+    b.onclick=()=>{lpIdx=i;updateLP();lspk();};
+    div.appendChild(b);
+  });
+}
+function renderLpStages(){
+  renderStageBtns('lp-stages',lpStage,st=>{lpStage=st;lpIdx=0;updateLP();renderWList();renderLpStages();});
+}
+
+// ============ MASTERY ============
+let mStage='ALL', mFlt='all';
+function setMFlt(f,el){
+  mFlt=f;
+  document.querySelectorAll('.flt').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderMastery();
+}
+function renderMastery(){
+  const none=ALL_WORDS.filter(w=>mastery[mKey(w)]?.status==='none').length;
+  const learn=ALL_WORDS.filter(w=>mastery[mKey(w)]?.status==='learn').length;
+  const ok=ALL_WORDS.filter(w=>mastery[mKey(w)]?.status==='ok').length;
+  const master=ALL_WORDS.filter(w=>mastery[mKey(w)]?.status==='master').length;
+  document.getElementById('m-none').textContent=none;
+  document.getElementById('m-learn').textContent=learn;
+  document.getElementById('m-ok').textContent=ok;
+  document.getElementById('m-master').textContent=master;
+  const pct=Math.round((ok+master)/ALL_WORDS.length*100);
+  document.getElementById('m-prog').style.width=pct+'%';
+  document.getElementById('m-pr').textContent=pct+'%';
+
+  renderStageBtns('m-stages',mStage,st=>{mStage=st;renderMastery();});
+
+  let list=mStage==='ALL'?ALL_WORDS:ALL_WORDS.filter(w=>w.stage===mStage);
+  if(mFlt!=='all')list=list.filter(w=>mastery[mKey(w)]?.status===mFlt);
+  const grid=document.getElementById('mgrid'); grid.innerHTML='';
+  list.forEach(w=>{
+    const ms=mastery[mKey(w)]||{status:'none',correct:0,wrong:0};
+    const tot=ms.correct+ms.wrong;
+    const pct2=tot===0?0:Math.round(ms.correct/tot*100);
+    const s=ms.status;
+    let bcls='b-none',btext='?',fillColor='#818cf8';
+    if(s==='learn'){bcls='b-learn';btext='△';fillColor='#d97706';}
+    else if(s==='ok'){bcls='b-ok';btext='○';fillColor='#38a169';}
+    else if(s==='master'){bcls='b-master';btext='★';fillColor='#7c3aed';}
+    const div=document.createElement('div');
+    div.className='mcard';
+    div.innerHTML=`<div class="mc-top"><span class="mc-badge ${bcls}">${btext}</span><span class="mc-word">${escHtml(w.w)}</span><span class="mc-stage" style="margin-left:auto">ST${w.stage}</span></div>
+<div class="mc-mean">${rubyHtml(w)}</div>
+<div class="mc-stats"><span>○${ms.correct} ✗${ms.wrong}</span><span>${pct2}%</span></div>
+<div class="mc-bar"><div class="mc-fill" style="width:${pct2}%;background:${fillColor}"></div></div>`;
+    div.onclick=()=>{lpStage=w.stage;lpIdx=getStageWords(w.stage).findIndex(x=>x.w===w.w);showTab('listen');updateLP();lspk();};
+    grid.appendChild(div);
+  });
+}
+function resetProg(){
+  mastery=defaultMastery();
+  if(currentProfileId) profiles[currentProfileId].mastery={...mastery};
+  saveAll(); renderMastery();
+}
+
+// ---- INIT ----
+renderFcStages();
+initFlash();
+renderQStages();
+updateQInfo();
+updateLP();
+renderLpStages();
+</script>
+</body>
+</html>
